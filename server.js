@@ -239,6 +239,17 @@ app.put('/api/assessment', authMiddleware, async (req, res) => {
   }
 });
 
+app.delete('/api/assessment', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'super_admin') return res.status(403).json({ error: 'هذا الإجراء متاح فقط للمدير الرئيسي' });
+    const old = await pool.query('SELECT * FROM assessments');
+    await pool.query('DELETE FROM assessments');
+    await pool.query('UPDATE domains SET current_level = NULL');
+    await logAudit(req.user.id, 'reset_all_assessments', 'assessments', null, { count: old.rows.length }, null);
+    res.json({ success: true, deleted: old.rows.length });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // --- DOMAINS (protected) ---
 app.get('/api/domains', authMiddleware, async (req, res) => {
   try {

@@ -37,12 +37,10 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{font-family:'IBM Plex Sans Arabic','Tajawal',sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased}
-body{
-  display:flex;flex-direction:column;min-height:100vh;
-  background:
-    radial-gradient(1200px 600px at 90% -10%, rgba(85,47,145,.06), transparent 60%),
-    radial-gradient(900px 500px at 10% -20%, rgba(0,195,243,.05), transparent 60%),
-    var(--paper)}
+body{background:
+  radial-gradient(1200px 600px at 90% -10%, rgba(85,47,145,.06), transparent 60%),
+  radial-gradient(900px 500px at 10% -20%, rgba(0,195,243,.05), transparent 60%),
+  var(--paper)}
 a{color:inherit}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 .container{max-width:1440px;margin:0 auto;padding:0 28px}
@@ -98,7 +96,7 @@ nav.tabs{
 .tab-icon{width:18px;height:18px;display:inline-block;opacity:.85}
 
 /* SECTIONS */
-main{padding:32px 0 80px;flex:1}
+main{padding:32px 0 80px}
 .view{display:none;animation:fadeIn .3s ease}
 .view.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -2544,14 +2542,27 @@ function clearQuestionAnswer(qi){
   renderQuestions();
 }
 
-function resetAllAnswers(){
-  if(!confirm('سيتم مسح جميع الإجابات في التقييم.\n\nالبيانات الأخرى (الأدلة، الخطة، المستويات المستهدفة) لن تتأثر.\n\nهل أنت متأكد؟')) return;
-  state.questions.forEach(q => q.current = null);
-  state.domains.forEach(d => d.current = null);
-  saveState();
-  renderQuestions();
-  // Also refresh dashboard if active
-  if(document.getElementById('view-dashboard').classList.contains('active')) renderDashboard();
+async function resetAllAnswers(){
+  var cu = getCurrentUser();
+  if(!cu || cu.role !== 'super_admin'){
+    alert('هذا الإجراء متاح فقط للمدير الرئيسي');
+    return;
+  }
+  if(!confirm('⚠️ هل أنت متأكد من إعادة تعيين جميع الإجابات؟\n\nسيتم حذف كل إجابات التقييم نهائياً من قاعدة البيانات.\nهذا الإجراء لا يمكن التراجع عنه.')) return;
+  if(!confirm('تأكيد نهائي: هل تريد فعلاً حذف جميع الإجابات؟')) return;
+  try {
+    var res = await authFetch('/api/assessment', { method: 'DELETE' });
+    var data = await res.json();
+    if(data.success){
+      state.questions.forEach(function(q){ q.current = null; });
+      state.domains.forEach(function(d){ d.current = null; });
+      alert('تم حذف ' + data.deleted + ' إجابة بنجاح');
+      renderDashboard();
+      renderQuestions();
+    } else {
+      alert(data.error || 'حدث خطأ');
+    }
+  } catch(e){ alert('خطأ: ' + e.message); }
 }
 
 // Map question area → domain sub+name
@@ -4066,6 +4077,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Build UI
     buildTabs();
+    var resetBtn = document.querySelector('[onclick*="resetAllAnswers"]');
+    if(resetBtn){
+      var cu = getCurrentUser();
+      if(!cu || cu.role !== 'super_admin') resetBtn.style.display = 'none';
+    }
     loadNotifications();
     setInterval(loadNotifications, 30000);
     const currentUser = getCurrentUser();
