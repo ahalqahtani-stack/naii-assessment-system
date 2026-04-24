@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const crypto = require('crypto');
 
 const app = express();
 
@@ -93,6 +94,57 @@ function adminOnly(req, res, next) {
   next();
 }
 
+function adminOrSuper(req, res, next) {
+  if (req.user.role !== 'admin' && req.user.role !== 'super_admin') return res.status(403).json({ error: 'Admin access required' });
+  next();
+}
+
+function superAdminOnly(req, res, next) {
+  if (req.user.role !== 'super_admin') return res.status(403).json({ error: 'Super admin access required' });
+  next();
+}
+
+// Password generation (cryptographically random, meets validatePassword requirements)
+function generatePassword() {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghjkmnpqrstuvwxyz';
+  const digits = '23456789';
+  const special = '!@#$%&*';
+  let pass = '';
+  pass += upper[crypto.randomInt(upper.length)];
+  pass += lower[crypto.randomInt(lower.length)];
+  pass += digits[crypto.randomInt(digits.length)];
+  pass += special[crypto.randomInt(special.length)];
+  const all = upper + lower + digits + special;
+  for (let i = 0; i < 8; i++) pass += all[crypto.randomInt(all.length)];
+  return pass.split('').sort(() => crypto.randomInt(3) - 1).join('');
+}
+
+function validatePassword(password, username) {
+  const errors = [];
+  if (password.length < 8) errors.push('يجب أن تكون 8 أحرف على الأقل');
+  if (!/[A-Z]/.test(password)) errors.push('يجب أن تحتوي على حرف كبير واحد على الأقل');
+  if (!/[a-z]/.test(password)) errors.push('يجب أن تحتوي على حرف صغير واحد على الأقل');
+  if (!/[0-9]/.test(password)) errors.push('يجب أن تحتوي على رقم واحد على الأقل');
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) errors.push('يجب أن تحتوي على رمز خاص واحد على الأقل (!@#$%^&*)');
+  if (username && password.toLowerCase().includes(username.toLowerCase())) errors.push('يجب ألا تحتوي على اسم المستخدم');
+  const common = ['password','123456','12345678','qwerty','admin123','letmein','welcome','Password1'];
+  if (common.includes(password.toLowerCase())) errors.push('كلمة المرور شائعة جداً');
+  return errors;
+}
+
+async function logAudit(userId, action, entity, entityId, oldValue, newValue) {
+  try {
+    await pool.query(
+      `INSERT INTO audit_log (user_id, action, entity, entity_id, old_value, new_value)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [userId, action, entity, entityId, oldValue ? JSON.stringify(oldValue) : null, newValue ? JSON.stringify(newValue) : null]
+    );
+  } catch (e) {
+    console.warn('audit log failed:', e.message);
+  }
+}
+
 // Health check (no auth)
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -124,20 +176,39 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
 
     if (!validPassword) return res.json({ success: false, error: 'كلمة المرور غير صحيحة' });
 
+    if (user.is_active === false) return res.json({ success: false, error: 'الحساب معطّل — تواصل مع مدير النظام' });
+
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role, dept: user.dept, name: user.name },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES }
     );
 
+    await logAudit(user.id, 'login', 'users', user.id, null, { username: user.username });
+    await pool.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [user.id]);
+
     res.json({
       success: true,
       token,
-      user: { id: user.id, name: user.name, role: user.role, dept: user.dept }
+      user: { id: user.id, name: user.name, role: user.role, dept: user.dept },
+      must_change_password: user.must_change_password || false
     });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
+});
+
+app.post('/api/auth/change-password', authMiddleware, async (req, res) => {
+  try {
+    const { new_password } = req.body;
+    if (!new_password) return res.status(400).json({ error: 'Password required' });
+    const errors = validatePassword(new_password, req.user.username);
+    if (errors.length > 0) return res.status(400).json({ error: errors.join(' · ') });
+    const hashed = await bcrypt.hash(new_password, 10);
+    await pool.query('UPDATE users SET password_hash = $1, must_change_password = FALSE WHERE id = $2', [hashed, req.user.id]);
+    await logAudit(req.user.id, 'change_password', 'users', req.user.id, null, null);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // --- ASSESSMENTS (protected) ---
@@ -289,7 +360,7 @@ app.post('/api/evidence/upload', authMiddleware, upload.single('file'), async (r
   }
 });
 
-app.put('/api/evidence/:id/approve', authMiddleware, adminOnly, async (req, res) => {
+app.put('/api/evidence/:id/approve', authMiddleware, adminOrSuper, async (req, res) => {
   try {
     const result = await pool.query(
       `UPDATE evidence SET status = 'approved', reviewed_by = $1, reviewed_at = NOW(), updated_at = NOW()
@@ -312,7 +383,7 @@ app.put('/api/evidence/:id/approve', authMiddleware, adminOnly, async (req, res)
   }
 });
 
-app.put('/api/evidence/:id/reject', authMiddleware, adminOnly, async (req, res) => {
+app.put('/api/evidence/:id/reject', authMiddleware, adminOrSuper, async (req, res) => {
   try {
     const { review_notes } = req.body;
     if (!review_notes) return res.status(400).json({ error: 'Rejection reason required' });
@@ -382,37 +453,53 @@ app.put('/api/notifications/read-all', authMiddleware, async (req, res) => {
 });
 
 // --- USERS (admin only) ---
-app.get('/api/users', authMiddleware, adminOnly, async (req, res) => {
+app.get('/api/users', authMiddleware, adminOrSuper, async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, username, name, role, dept, created_at FROM users ORDER BY id');
+    const showAll = req.user.role === 'super_admin';
+    const query = showAll
+      ? 'SELECT id, username, name, role, dept, must_change_password, last_login_at, is_active, created_at FROM users ORDER BY id'
+      : 'SELECT id, username, name, role, dept, must_change_password, last_login_at, is_active, created_at FROM users WHERE is_active = TRUE ORDER BY id';
+    const result = await pool.query(query);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/users', authMiddleware, adminOnly, async (req, res) => {
+app.post('/api/users', authMiddleware, adminOrSuper, async (req, res) => {
   try {
-    const { username, password, name, role, dept } = req.body;
-    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
-    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    const { username, name, role, dept } = req.body;
+    if (!username) return res.status(400).json({ error: 'Username required' });
 
-    const hashed = await bcrypt.hash(password, 10);
+    const tempPassword = generatePassword();
+    const hashed = await bcrypt.hash(tempPassword, 10);
     const result = await pool.query(
-      `INSERT INTO users (username, password_hash, name, role, dept)
-       VALUES ($1, $2, $3, $4, $5) RETURNING id, username, name, role, dept, created_at`,
+      `INSERT INTO users (username, password_hash, name, role, dept, must_change_password)
+       VALUES ($1, $2, $3, $4, $5, TRUE) RETURNING id, username, name, role, dept, must_change_password, created_at`,
       [username, hashed, name || '', role || 'department', dept || '']
     );
-    res.json({ success: true, user: result.rows[0] });
+    await logAudit(req.user.id, 'create_user', 'users', result.rows[0].id, null, { username, role, dept });
+    res.json({ success: true, user: result.rows[0], temp_password: tempPassword });
   } catch (err) {
     if (err.code === '23505') return res.status(400).json({ error: 'اسم المستخدم موجود مسبقاً' });
     res.status(500).json({ error: err.message });
   }
 });
 
-app.put('/api/users/:id', authMiddleware, adminOnly, async (req, res) => {
+app.put('/api/users/:id', authMiddleware, adminOrSuper, async (req, res) => {
   try {
-    const { name, role, dept, password } = req.body;
+    const { name, role, dept, password, reset_password } = req.body;
+    if (reset_password) {
+      const tempPassword = generatePassword();
+      const hashed = await bcrypt.hash(tempPassword, 10);
+      const result = await pool.query(
+        'UPDATE users SET name=$1, role=$2, dept=$3, password_hash=$4, must_change_password=TRUE WHERE id=$5 RETURNING id, username, name, role, dept',
+        [name, role, dept, hashed, req.params.id]
+      );
+      if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+      await logAudit(req.user.id, 'reset_password', 'users', req.params.id, null, null);
+      return res.json({ success: true, user: result.rows[0], temp_password: tempPassword });
+    }
     if (password) {
       if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
       const hashed = await bcrypt.hash(password, 10);
@@ -435,14 +522,28 @@ app.put('/api/users/:id', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
-app.delete('/api/users/:id', authMiddleware, adminOnly, async (req, res) => {
+app.delete('/api/users/:id', authMiddleware, superAdminOnly, async (req, res) => {
   try {
-    if (parseInt(req.params.id) === 1) return res.status(400).json({ error: 'Cannot delete primary admin' });
-    await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
+    const userId = parseInt(req.params.id);
+    if (userId === 1) return res.status(400).json({ error: 'لا يمكن حذف المدير الرئيسي' });
+
+    // Soft delete - deactivate instead of hard delete
+    const old = await pool.query('SELECT username, name, role FROM users WHERE id = $1', [userId]);
+    if (old.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+
+    await pool.query('UPDATE users SET is_active = FALSE WHERE id = $1', [userId]);
+    await logAudit(req.user.id, 'deactivate_user', 'users', userId, old.rows[0], { is_active: false });
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/users/:id/reactivate', authMiddleware, superAdminOnly, async (req, res) => {
+  try {
+    const result = await pool.query('UPDATE users SET is_active = TRUE WHERE id = $1 RETURNING id, username, name, role, dept', [req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    await logAudit(req.user.id, 'reactivate_user', 'users', parseInt(req.params.id), null, { is_active: true });
+    res.json({ success: true, user: result.rows[0] });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // --- FILES (protected) ---
@@ -454,7 +555,7 @@ app.get('/api/files/:filename', authMiddleware, (req, res) => {
 });
 
 // --- EXPORT (admin only) ---
-app.get('/api/export', authMiddleware, adminOnly, async (req, res) => {
+app.get('/api/export', authMiddleware, adminOrSuper, async (req, res) => {
   try {
     const assessments = await pool.query('SELECT * FROM assessments');
     const domains = await pool.query('SELECT * FROM domains');
@@ -475,7 +576,7 @@ app.get('/api/export', authMiddleware, adminOnly, async (req, res) => {
 });
 
 // --- DEPT STATUS (admin only) ---
-app.get('/api/dept-status', authMiddleware, adminOnly, async (req, res) => {
+app.get('/api/dept-status', authMiddleware, adminOrSuper, async (req, res) => {
   try {
     const evidence = await pool.query('SELECT question_code, level, status, file_name FROM evidence WHERE has_doc = true');
     const domains = await pool.query('SELECT * FROM domains');

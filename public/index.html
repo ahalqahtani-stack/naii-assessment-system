@@ -37,10 +37,12 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{font-family:'IBM Plex Sans Arabic','Tajawal',sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased}
-body{background:
-  radial-gradient(1200px 600px at 90% -10%, rgba(85,47,145,.06), transparent 60%),
-  radial-gradient(900px 500px at 10% -20%, rgba(0,195,243,.05), transparent 60%),
-  var(--paper)}
+body{
+  display:flex;flex-direction:column;min-height:100vh;
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(85,47,145,.06), transparent 60%),
+    radial-gradient(900px 500px at 10% -20%, rgba(0,195,243,.05), transparent 60%),
+    var(--paper)}
 a{color:inherit}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 .container{max-width:1440px;margin:0 auto;padding:0 28px}
@@ -96,7 +98,7 @@ nav.tabs{
 .tab-icon{width:18px;height:18px;display:inline-block;opacity:.85}
 
 /* SECTIONS */
-main{padding:32px 0 80px}
+main{padding:32px 0 80px;flex:1}
 .view{display:none;animation:fadeIn .3s ease}
 .view.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -836,27 +838,30 @@ footer{padding:30px 0;text-align:center;color:var(--muted);font-size:12.5px;bord
   </div>
 </div>
 
-<div id="changePasswordOverlay" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#552F91 0%,#3f1f72 50%,#1a0a3e 100%);z-index:9999;align-items:center;justify-content:center;font-family:'IBM Plex Sans Arabic','Tajawal',sans-serif">
-  <div style="background:#fff;border-radius:20px;padding:50px 40px;width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center">
-    <div style="margin-bottom:24px">
-      <div style="font-size:40px;margin-bottom:12px">🔑</div>
-      <h2 style="font-family:'Tajawal';font-weight:800;color:#552F91;font-size:22px;margin:0 0 6px">تغيير كلمة المرور</h2>
-      <p style="color:#757575;font-size:13px;margin:0">يجب تغيير كلمة المرور قبل المتابعة</p>
+<div id="changePasswordOverlay" style="position:fixed;inset:0;background:linear-gradient(135deg,#552F91 0%,#3f1f72 50%,#1a0a3e 100%);z-index:9998;display:none;align-items:center;justify-content:center;font-family:'IBM Plex Sans Arabic','Tajawal',sans-serif">
+  <div style="background:#fff;border-radius:20px;padding:50px 40px;width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center">
+    <div style="font-size:40px;margin-bottom:12px">🔑</div>
+    <h2 style="font-family:'Tajawal';font-weight:800;color:#552F91;font-size:20px;margin:0 0 6px">تغيير كلمة المرور</h2>
+    <p style="color:#757575;font-size:13px;margin:0 0 12px">يجب تغيير كلمة المرور المؤقتة قبل المتابعة</p>
+    <div style="background:#f5f0fa;border-radius:8px;padding:10px 14px;margin-bottom:16px;text-align:right;font-size:11px;color:#552F91;line-height:1.8">
+      <b>متطلبات كلمة المرور:</b><br>
+      ✦ 8 أحرف على الأقل<br>
+      ✦ حرف كبير واحد على الأقل (A-Z)<br>
+      ✦ حرف صغير واحد على الأقل (a-z)<br>
+      ✦ رقم واحد على الأقل (0-9)<br>
+      ✦ رمز خاص واحد على الأقل (!@#$%^&amp;*)<br>
+      ✦ لا تحتوي على اسم المستخدم
     </div>
-    <div id="cpError" style="display:none;background:#fef5f3;color:#a8331f;padding:10px;border-radius:8px;font-size:13px;margin-bottom:16px;border:1px solid #f1c5bc"></div>
+    <div id="changePwError" style="display:none;background:#fef5f3;color:#a8331f;padding:10px;border-radius:8px;font-size:13px;margin-bottom:16px;border:1px solid #f1c5bc"></div>
     <div style="text-align:right;margin-bottom:14px">
-      <label style="font-size:12px;font-weight:600;color:#333;display:block;margin-bottom:6px">كلمة المرور الحالية</label>
-      <input id="cpOld" type="password" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:inherit;direction:ltr;text-align:left">
-    </div>
-    <div style="text-align:right;margin-bottom:14px">
-      <label style="font-size:12px;font-weight:600;color:#333;display:block;margin-bottom:6px">كلمة المرور الجديدة (6 أحرف على الأقل)</label>
-      <input id="cpNew" type="password" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:inherit;direction:ltr;text-align:left">
+      <label style="font-size:12px;font-weight:600;color:#333;display:block;margin-bottom:6px">كلمة المرور الجديدة</label>
+      <input id="newPass1" type="password" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:inherit;direction:ltr;text-align:left" placeholder="Abc@1234">
     </div>
     <div style="text-align:right;margin-bottom:20px">
-      <label style="font-size:12px;font-weight:600;color:#333;display:block;margin-bottom:6px">تأكيد كلمة المرور الجديدة</label>
-      <input id="cpConfirm" type="password" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:inherit;direction:ltr;text-align:left" onkeydown="if(event.key==='Enter')doChangePassword()">
+      <label style="font-size:12px;font-weight:600;color:#333;display:block;margin-bottom:6px">تأكيد كلمة المرور</label>
+      <input id="newPass2" type="password" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:inherit;direction:ltr;text-align:left" placeholder="أعد كتابة كلمة المرور" onkeydown="if(event.key==='Enter')doChangePassword()">
     </div>
-    <button onclick="doChangePassword()" style="width:100%;padding:13px;background:#552F91;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:'Tajawal';cursor:pointer;transition:background .2s" onmouseover="this.style.background='#3f1f72'" onmouseout="this.style.background='#552F91'">تغيير كلمة المرور</button>
+    <button onclick="doChangePassword()" style="width:100%;padding:13px;background:#552F91;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:'Tajawal';cursor:pointer">تغيير كلمة المرور</button>
   </div>
 </div>
 
@@ -1485,18 +1490,18 @@ footer{padding:30px 0;text-align:center;color:var(--muted);font-size:12.5px;bord
           <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">اسم المستخدم</label>
           <input id="uUsername" type="text" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-family:inherit;font-size:14px;direction:ltr;text-align:left" placeholder="aalaqeel">
         </div>
-        <div>
-          <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">كلمة المرور</label>
-          <input id="uPass" type="text" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-family:inherit;font-size:14px;direction:ltr;text-align:left" placeholder="كلمة مرور مؤقتة">
+        <div id="uPassWrap" style="padding:10px 14px;background:var(--sand);border-radius:8px;margin-top:4px">
+          <p style="font-size:12px;color:#757575;margin:0">🔐 سيتم توليد كلمة مرور مؤقتة تلقائياً عند الإنشاء</p>
         </div>
         <div>
           <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">الدور</label>
-          <select id="uRole" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-family:inherit;font-size:14px">
+          <select id="uRole" onchange="toggleDeptField()" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-family:inherit;font-size:14px">
+            <option value="super_admin">مدير رئيسي (Super Admin)</option>
             <option value="admin">مدير النظام (Admin)</option>
             <option value="department" selected>إدارة (Department)</option>
           </select>
         </div>
-        <div>
+        <div id="uDeptWrap">
           <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">الإدارة</label>
           <select id="uDept" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-family:inherit;font-size:14px">
           </select>
@@ -1533,7 +1538,7 @@ footer{padding:30px 0;text-align:center;color:var(--muted);font-size:12.5px;bord
 
 </main>
 
-<footer style="text-align:center;padding:18px 20px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);margin-top:40px">
+<footer style="text-align:center;padding:18px 20px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);background:#fff;margin-top:auto">
   <div>© 2026 المركز الوطني للتعلم الإلكتروني (NeLC) · جميع الحقوق محفوظة</div>
   <div style="margin-top:4px;font-size:11px;color:#bbb">تطوير إدارة البنية المؤسسية · الإصدار 1.0</div>
 </footer>
@@ -1695,7 +1700,7 @@ function buildTabs(){
   switchTab('dashboard');
 
   const user = getCurrentUser();
-  if(user && user.role === 'department'){
+  if(user && user.role !== 'admin' && user.role !== 'super_admin'){
     document.querySelectorAll('[data-tab]').forEach(t => {
       const tabId = t.getAttribute('data-tab');
       if(!['about','dept-dashboard','dept-questions'].includes(tabId)) t.style.display = 'none';
@@ -3126,6 +3131,8 @@ let editingUserId = null;
 async function renderUsers(){
   const el = document.getElementById('usersTable');
   if(!el) return;
+  const currentUser = getCurrentUser();
+  const currentUserRole = currentUser ? currentUser.role : '';
   try {
     const res = await authFetch('/api/users');
     const users = await res.json();
@@ -3139,24 +3146,30 @@ async function renderUsers(){
             <th style="padding:14px 16px;text-align:right;font-family:'Tajawal';font-weight:700">الدور</th>
             <th style="padding:14px 16px;text-align:right;font-family:'Tajawal';font-weight:700">الإدارة</th>
             <th style="padding:14px 16px;text-align:right;font-family:'Tajawal';font-weight:700">تاريخ الإنشاء</th>
+            <th style="padding:14px 16px;text-align:right;font-family:'Tajawal';font-weight:700">آخر دخول</th>
             <th style="padding:14px 16px;text-align:center;font-family:'Tajawal';font-weight:700">إجراءات</th>
           </tr>
         </thead>
         <tbody>
-          ${users.map((u,i) => `
-            <tr style="border-bottom:1px solid #eee">
-              <td style="padding:12px 16px">${i+1}</td>
-              <td style="padding:12px 16px;font-weight:600">${u.name || '—'}</td>
-              <td style="padding:12px 16px;direction:ltr;font-family:monospace">${u.username}</td>
-              <td style="padding:12px 16px"><span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;${u.role==='admin'?'background:#F5F0FA;color:#552F91':'background:#E0F7FD;color:#005c75'}">${u.role==='admin'?'مدير النظام':'إدارة'}</span></td>
-              <td style="padding:12px 16px">${u.dept || '—'}</td>
-              <td style="padding:12px 16px;font-size:12px;color:#757575">${u.created_at ? new Date(u.created_at).toLocaleDateString('ar-SA') : '—'}</td>
-              <td style="padding:12px 16px;text-align:center">
-                <button onclick="editUser(${u.id},'${u.name}','${u.username}','${u.role}','${u.dept}')" style="padding:5px 10px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;font-size:11px;margin:0 2px">تعديل</button>
-                ${u.id !== 1 ? `<button onclick="deleteUser(${u.id},'${u.name}')" style="padding:5px 10px;border:1px solid #f1c5bc;border-radius:6px;background:#fef5f3;color:#a8331f;cursor:pointer;font-size:11px;margin:0 2px">حذف</button>` : ''}
-              </td>
-            </tr>
-          `).join('')}
+          ${users.map((u,i) => '<tr style="border-bottom:1px solid #eee">' +
+            '<td style="padding:12px 16px">' + (i+1) + '</td>' +
+            '<td style="padding:12px 16px;font-weight:600">' + (u.name || '—') + '</td>' +
+            '<td style="padding:12px 16px;direction:ltr;font-family:monospace">' + u.username + '</td>' +
+            '<td style="padding:12px 16px"><span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;' + (u.role==='super_admin'?'background:#fbe8e5;color:#a8331f':u.role==='admin'?'background:#F5F0FA;color:#552F91':'background:#E0F7FD;color:#005c75') + '">' + (u.role==='super_admin'?'مدير رئيسي':u.role==='admin'?'مدير النظام':'إدارة') + '</span></td>' +
+            '<td style="padding:12px 16px">' + ((u.role === 'admin' || u.role === 'super_admin') ? '—' : (u.dept || '—')) + '</td>' +
+            '<td style="padding:12px 16px;font-size:12px;color:#757575">' + (u.created_at ? new Date(u.created_at).toLocaleDateString('ar-SA') : '—') + '</td>' +
+            '<td style="padding:12px 16px;font-size:12px;color:#757575">' + (u.last_login_at ? new Date(u.last_login_at).toLocaleString('ar-SA') : 'لم يسجل دخول') + '</td>' +
+            '<td style="padding:12px 16px;text-align:center">' +
+              (u.is_active === false ?
+                '<span style="padding:4px 10px;border-radius:6px;font-size:10px;font-weight:600;background:#fbe8e5;color:#a8331f;margin-left:6px">معطّل</span>' : '') +
+              '<button onclick="editUser(' + u.id + ',\'' + (u.name||'').replace(/'/g,"\\'") + '\',\'' + u.username + '\',\'' + u.role + '\',\'' + (u.dept||'').replace(/'/g,"\\'") + '\')" style="padding:5px 10px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;font-size:11px;margin:0 2px">تعديل</button>' +
+              (u.is_active === false ?
+                '<button onclick="reactivateUser(' + u.id + ',\'' + (u.name||'') + '\')" style="padding:5px 10px;border:1px solid #88d4ae;border-radius:6px;background:#f0faf3;color:#26B67B;cursor:pointer;font-size:11px;margin:0 2px">تفعيل</button>'
+              : (u.id !== 1 && currentUserRole === 'super_admin' ?
+                '<button onclick="deleteUser(' + u.id + ',\'' + (u.name||'') + '\')" style="padding:5px 10px;border:1px solid #f1c5bc;border-radius:6px;background:#fef5f3;color:#a8331f;cursor:pointer;font-size:11px;margin:0 2px">تعطيل</button>'
+                : '')) +
+            '</td>' +
+          '</tr>').join('')}
         </tbody>
       </table>
     `;
@@ -3168,14 +3181,28 @@ function showAddUser(){
   document.getElementById('userModalTitle').textContent = 'إضافة مستخدم جديد';
   document.getElementById('uName').value = '';
   document.getElementById('uUsername').value = '';
-  document.getElementById('uPass').value = '';
+  document.getElementById('uPassWrap').innerHTML = '<p style="font-size:12px;color:#757575;margin:0">🔐 سيتم توليد كلمة مرور مؤقتة تلقائياً عند الإنشاء</p>';
   document.getElementById('uRole').value = 'department';
   // Populate dept dropdown
   const deptEl = document.getElementById('uDept');
   deptEl.innerHTML = DEPT_GROUPS.map(g =>
     '<optgroup label="'+g.sector+'">' + g.depts.map(d => '<option>'+d+'</option>').join('') + '</optgroup>'
   ).join('');
+  toggleDeptField();
   document.getElementById('userModal').style.display = 'flex';
+}
+
+function toggleDeptField(){
+  var role = document.getElementById('uRole').value;
+  var wrap = document.getElementById('uDeptWrap');
+  if(wrap){
+    if(role === 'admin' || role === 'super_admin'){
+      wrap.style.display = 'none';
+      document.getElementById('uDept').value = '';
+    } else {
+      wrap.style.display = 'block';
+    }
+  }
 }
 
 function editUser(id, name, username, role, dept){
@@ -3183,12 +3210,13 @@ function editUser(id, name, username, role, dept){
   document.getElementById('userModalTitle').textContent = 'تعديل مستخدم';
   document.getElementById('uName').value = name;
   document.getElementById('uUsername').value = username;
-  document.getElementById('uPass').value = '';
+  document.getElementById('uPassWrap').innerHTML = '<label style="font-size:12px;cursor:pointer"><input type="checkbox" id="uResetPass" style="margin-left:6px"> إعادة تعيين كلمة المرور (سيتم توليد كلمة مرور مؤقتة جديدة)</label>';
   document.getElementById('uRole').value = role;
   const deptEl = document.getElementById('uDept');
   deptEl.innerHTML = DEPT_GROUPS.map(g =>
     '<optgroup label="'+g.sector+'">' + g.depts.map(d => '<option '+(d===dept?'selected':'')+'>'+d+'</option>').join('') + '</optgroup>'
   ).join('');
+  toggleDeptField();
   document.getElementById('userModal').style.display = 'flex';
 }
 
@@ -3202,13 +3230,17 @@ async function saveUser(){
   const data = {
     name: document.getElementById('uName').value.trim(),
     username: document.getElementById('uUsername').value.trim(),
-    password: document.getElementById('uPass').value,
     role: document.getElementById('uRole').value,
     dept: document.getElementById('uDept').value
   };
+  if(data.role === 'admin') data.dept = '';
   if(!data.username){ alert('أدخل اسم المستخدم'); return; }
-  // Auto-generate temp password for new users if blank
-  if(wasNew && !data.password) data.password = generateTempPassword();
+  // For create, server auto-generates the password.
+  // For edit, send reset_password=true if the admin checked the reset box.
+  if(editingUserId){
+    var resetPass = document.getElementById('uResetPass');
+    if(resetPass && resetPass.checked) data.reset_password = true;
+  }
   try {
     const url = editingUserId ? '/api/users/'+editingUserId : '/api/users';
     const method = editingUserId ? 'PUT' : 'POST';
@@ -3216,22 +3248,54 @@ async function saveUser(){
     const result = await res.json();
     if(result.success){
       closeUserModal();
-      renderUsers();
-      if(wasNew){
-        alert('تم إنشاء المستخدم بنجاح\n\nاسم المستخدم: ' + data.username + '\nكلمة المرور المؤقتة: ' + data.password + '\n\nيرجى نقل هذه المعلومات للمستخدم. سيُطلب منه تغيير كلمة المرور عند أول تسجيل دخول.');
+      if(result.temp_password){
+        var isReset = !!editingUserId;
+        editingUserId = null;
+        var container = document.getElementById('usersTable');
+        container.innerHTML =
+          '<div style="background:#fff;border:2px solid var(--brand-purple);border-radius:16px;padding:30px;max-width:500px;margin:20px auto;text-align:center">' +
+            '<div style="font-size:32px;margin-bottom:12px">' + (isReset ? '🔄' : '✅') + '</div>' +
+            '<h3 style="font-family:Tajawal;font-weight:800;color:var(--brand-purple);margin-bottom:8px">' + (isReset ? 'تم إعادة تعيين كلمة المرور' : 'تم إنشاء المستخدم بنجاح') + '</h3>' +
+            '<p style="font-size:13px;color:#757575;margin-bottom:20px">' + (isReset ? 'كلمة المرور المؤقتة الجديدة — سيُطلب من المستخدم تغييرها عند تسجيل الدخول القادم' : 'كلمة المرور المؤقتة — سيُطلب من المستخدم تغييرها عند أول تسجيل دخول') + '</p>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:right;margin-bottom:20px">' +
+              '<div style="padding:12px 14px;background:var(--sand);border-radius:10px"><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:4px">اسم المستخدم</div><div style="font-weight:700;font-size:16px;direction:ltr;text-align:left;font-family:monospace">' + result.user.username + '</div></div>' +
+              '<div style="padding:12px 14px;background:#f0faf3;border-radius:10px;border:2px solid var(--brand-green)"><div style="font-size:10px;color:var(--brand-green);font-weight:600;margin-bottom:4px">كلمة المرور المؤقتة</div><div style="font-weight:700;font-size:18px;direction:ltr;text-align:left;font-family:monospace;letter-spacing:2px;color:var(--brand-purple)">' + result.temp_password + '</div></div>' +
+            '</div>' +
+            '<div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px">' +
+              '<button onclick="copyToClipboard(\x27اسم المستخدم: ' + result.user.username + '\\nكلمة المرور: ' + result.temp_password + '\x27)" style="padding:10px 24px;background:var(--brand-purple);color:#fff;border:none;border-radius:8px;font-family:Tajawal;font-weight:700;font-size:13px;cursor:pointer">📋 نسخ البيانات</button>' +
+              '<button onclick="renderUsers()" style="padding:10px 24px;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:8px;font-family:Tajawal;font-weight:700;font-size:13px;cursor:pointer">العودة للقائمة</button>' +
+            '</div>' +
+            '<div style="padding:10px 14px;background:#fef9ee;border-radius:8px;border-right:3px solid var(--warn);text-align:right;font-size:11px;color:#735c0e;line-height:1.8">' +
+              '<b>⚠️ انسخ البيانات الآن</b> — لن تتمكن من رؤية كلمة المرور مرة أخرى<br>' +
+              '<b>متطلبات كلمة المرور الجديدة:</b> 8 أحرف على الأقل · حرف كبير + صغير · رقم · رمز خاص' +
+            '</div>' +
+          '</div>';
+        return;
       }
+      editingUserId = null;
+      renderUsers();
     } else { alert(result.error || 'حدث خطأ'); }
   } catch(e){ alert('خطأ: '+e.message); }
 }
 
 async function deleteUser(id, name){
-  if(!confirm('هل تريد حذف المستخدم: '+name+'؟')) return;
+  if(!confirm('هل تريد تعطيل حساب: ' + name + '؟\n\nسيتم تعطيل الحساب ولن يتمكن المستخدم من تسجيل الدخول.')) return;
   try {
     const res = await authFetch('/api/users/'+id, { method:'DELETE' });
     const result = await res.json();
     if(result.success) renderUsers();
     else alert(result.error);
   } catch(e){ alert('خطأ: '+e.message); }
+}
+
+async function reactivateUser(id, name){
+  if(!confirm('هل تريد تفعيل حساب: ' + name + '؟')) return;
+  try {
+    var res = await authFetch('/api/users/' + id + '/reactivate', { method:'PUT', headers:{'Content-Type':'application/json'} });
+    var result = await res.json();
+    if(result.success) renderUsers();
+    else alert(result.error);
+  } catch(e){ alert('خطأ: ' + e.message); }
 }
 
 async function renderDeptDashboard(){
@@ -3642,6 +3706,9 @@ function doLogin(){
     if(data.success){
       sessionStorage.setItem('naii_token', data.token);
       sessionStorage.setItem('naii_user', JSON.stringify(data.user));
+      if(data.must_change_password){
+        sessionStorage.setItem('naii_must_change', 'true');
+      }
       location.reload();
     } else {
       errEl.textContent = data.error || 'اسم المستخدم أو كلمة المرور غير صحيحة';
@@ -3664,6 +3731,20 @@ function checkAuth(){
 function getCurrentUser(){
   try { return JSON.parse(sessionStorage.getItem('naii_user')); }
   catch(e) { return null; }
+}
+
+function copyToClipboard(text){
+  navigator.clipboard.writeText(text).then(() => {
+    alert('تم النسخ بنجاح');
+  }).catch(() => {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert('تم النسخ بنجاح');
+  });
 }
 
 function authFetch(url, opts){
@@ -3702,43 +3783,35 @@ function generateTempPassword(){
 }
 
 async function doChangePassword(){
-  const oldPw = document.getElementById('cpOld').value;
-  const newPw = document.getElementById('cpNew').value;
-  const confirmPw = document.getElementById('cpConfirm').value;
-  const errEl = document.getElementById('cpError');
+  const p1 = document.getElementById('newPass1').value;
+  const p2 = document.getElementById('newPass2').value;
+  const errEl = document.getElementById('changePwError');
   errEl.style.display = 'none';
-  if(!oldPw || !newPw || !confirmPw){
-    errEl.textContent = 'جميع الحقول مطلوبة';
-    errEl.style.display = 'block'; return;
-  }
-  if(newPw.length < 6){
-    errEl.textContent = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
-    errEl.style.display = 'block'; return;
-  }
-  if(newPw !== confirmPw){
-    errEl.textContent = 'كلمات المرور غير متطابقة';
-    errEl.style.display = 'block'; return;
-  }
+  if(!p1){ errEl.textContent='أدخل كلمة المرور الجديدة'; errEl.style.display='block'; return; }
+  if(p1 !== p2){ errEl.textContent='كلمتا المرور غير متطابقتين'; errEl.style.display='block'; return; }
+  var clientErrors = [];
+  if(p1.length < 8) clientErrors.push('8 أحرف على الأقل');
+  if(!/[A-Z]/.test(p1)) clientErrors.push('حرف كبير');
+  if(!/[a-z]/.test(p1)) clientErrors.push('حرف صغير');
+  if(!/[0-9]/.test(p1)) clientErrors.push('رقم');
+  if(!/[!@#$%^&*()_+\-=\[\]{};:"|,.<>?]/.test(p1)) clientErrors.push('رمز خاص');
+  if(clientErrors.length > 0){ errEl.textContent='ينقص: ' + clientErrors.join(' · '); errEl.style.display='block'; return; }
   try {
-    const res = await authFetch('/api/auth/change-password', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ old_password: oldPw, new_password: newPw })
+    var res = await authFetch('/api/auth/change-password', {
+      method:'POST',
+      headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + sessionStorage.getItem('naii_token')},
+      body: JSON.stringify({new_password: p1})
     });
-    const data = await res.json();
+    var data = await res.json();
     if(data.success){
-      const u = getCurrentUser();
-      if(u){ u.must_change_password = false; sessionStorage.setItem('naii_user', JSON.stringify(u)); }
+      sessionStorage.removeItem('naii_must_change');
       alert('تم تغيير كلمة المرور بنجاح');
       location.reload();
     } else {
-      errEl.textContent = data.error || 'فشل تغيير كلمة المرور';
+      errEl.textContent = data.error || 'حدث خطأ';
       errEl.style.display = 'block';
     }
-  } catch(e){
-    errEl.textContent = 'خطأ في الاتصال: ' + e.message;
-    errEl.style.display = 'block';
-  }
+  } catch(e){ errEl.textContent='خطأ في الاتصال'; errEl.style.display='block'; }
 }
 
 function doLogout(){
@@ -3887,8 +3960,7 @@ function getDomainEvidence(d){
 
 document.addEventListener('DOMContentLoaded', async () => {
   if(!checkAuth()) return;
-  const _u = getCurrentUser();
-  if(_u && _u.must_change_password){
+  if(sessionStorage.getItem('naii_must_change') === 'true'){
     document.getElementById('changePasswordOverlay').style.display = 'flex';
     return;
   }
@@ -3979,7 +4051,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentUser = getCurrentUser();
     if(currentUser){
       const nameEl = document.getElementById('headerUserName');
-      if(nameEl) nameEl.textContent = 'مرحباً، ' + (currentUser.name || currentUser.username);
+      if(nameEl) nameEl.textContent = 'مرحباً، ' + (currentUser.name || currentUser.username) + (currentUser.role === 'super_admin' ? ' (مدير رئيسي)' : '');
     }
     renderDashboard();
 
