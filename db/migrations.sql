@@ -133,9 +133,9 @@ CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at DESC);
 
 -- ============================================================
--- DEFAULT SUPER ADMIN
--- Password: admin123 (must be changed on first login in production)
+-- NOTE: Super admin should be created manually on first deploy
+-- Do NOT use default admin/admin123 in production
+-- Example:
+-- INSERT INTO users (username, password_hash, name, role, is_active, must_change_password)
+-- VALUES ('your_username', 'bcrypt_hash_here', 'Your Name', 'super_admin', TRUE, TRUE);
 -- ============================================================
-INSERT INTO users (username, password_hash, name, role, dept, is_active, must_change_password)
-VALUES ('admin', 'admin123', 'مدير النظام', 'super_admin', '', TRUE, FALSE)
-ON CONFLICT (username) DO NOTHING;

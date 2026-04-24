@@ -3162,7 +3162,7 @@ async function renderUsers(){
             '<td style="padding:12px 16px;text-align:center">' +
               (u.is_active === false ?
                 '<span style="padding:4px 10px;border-radius:6px;font-size:10px;font-weight:600;background:#fbe8e5;color:#a8331f;margin-left:6px">معطّل</span>' : '') +
-              '<button onclick="editUser(' + u.id + ',\'' + (u.name||'').replace(/'/g,"\\'") + '\',\'' + u.username + '\',\'' + u.role + '\',\'' + (u.dept||'').replace(/'/g,"\\'") + '\')" style="padding:5px 10px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;font-size:11px;margin:0 2px">تعديل</button>' +
+              ((currentUserRole === 'super_admin' || u.role === 'department') ? '<button onclick="editUser(' + u.id + ',\'' + (u.name||'').replace(/'/g,"\\'") + '\',\'' + u.username + '\',\'' + u.role + '\',\'' + (u.dept||'').replace(/'/g,"\\'") + '\')" style="padding:5px 10px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;font-size:11px;margin:0 2px">تعديل</button>' : '') +
               (u.is_active === false ?
                 '<button onclick="reactivateUser(' + u.id + ',\'' + (u.name||'') + '\')" style="padding:5px 10px;border:1px solid #88d4ae;border-radius:6px;background:#f0faf3;color:#26B67B;cursor:pointer;font-size:11px;margin:0 2px">تفعيل</button>'
               : (u.id !== 1 && currentUserRole === 'super_admin' ?
@@ -3183,6 +3183,15 @@ function showAddUser(){
   document.getElementById('uUsername').value = '';
   document.getElementById('uPassWrap').innerHTML = '<p style="font-size:12px;color:#757575;margin:0">🔐 سيتم توليد كلمة مرور مؤقتة تلقائياً عند الإنشاء</p>';
   document.getElementById('uRole').value = 'department';
+  var cu = getCurrentUser();
+  var roleEl = document.getElementById('uRole');
+  if(cu && cu.role !== 'super_admin'){
+    // Admin can only create department users
+    roleEl.innerHTML = '<option value="department" selected>إدارة (Department)</option>';
+  } else {
+    // Super admin can create all roles
+    roleEl.innerHTML = '<option value="super_admin">مدير رئيسي (Super Admin)</option><option value="admin">مدير النظام (Admin)</option><option value="department" selected>إدارة (Department)</option>';
+  }
   // Populate dept dropdown
   const deptEl = document.getElementById('uDept');
   deptEl.innerHTML = DEPT_GROUPS.map(g =>
@@ -3212,6 +3221,12 @@ function editUser(id, name, username, role, dept){
   document.getElementById('uUsername').value = username;
   document.getElementById('uPassWrap').innerHTML = '<label style="font-size:12px;cursor:pointer"><input type="checkbox" id="uResetPass" style="margin-left:6px"> إعادة تعيين كلمة المرور (سيتم توليد كلمة مرور مؤقتة جديدة)</label>';
   document.getElementById('uRole').value = role;
+  var cu = getCurrentUser();
+  var roleEl = document.getElementById('uRole');
+  if(cu && cu.role !== 'super_admin'){
+    roleEl.innerHTML = '<option value="department" selected>إدارة (Department)</option>';
+    roleEl.value = role;
+  }
   const deptEl = document.getElementById('uDept');
   deptEl.innerHTML = DEPT_GROUPS.map(g =>
     '<optgroup label="'+g.sector+'">' + g.depts.map(d => '<option '+(d===dept?'selected':'')+'>'+d+'</option>').join('') + '</optgroup>'

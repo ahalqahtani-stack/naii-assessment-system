@@ -455,11 +455,13 @@ app.put('/api/notifications/read-all', authMiddleware, async (req, res) => {
 // --- USERS (admin only) ---
 app.get('/api/users', authMiddleware, adminOrSuper, async (req, res) => {
   try {
-    const showAll = req.user.role === 'super_admin';
-    const query = showAll
-      ? 'SELECT id, username, name, role, dept, must_change_password, last_login_at, is_active, created_at FROM users ORDER BY id'
-      : 'SELECT id, username, name, role, dept, must_change_password, last_login_at, is_active, created_at FROM users WHERE is_active = TRUE ORDER BY id';
-    const result = await pool.query(query);
+    let query;
+    if (req.user.role === 'super_admin') {
+      query = 'SELECT id, username, name, role, dept, must_change_password, last_login_at, is_active, created_at FROM users ORDER BY id';
+    } else {
+      query = 'SELECT id, username, name, role, dept, must_change_password, last_login_at, is_active, created_at FROM users WHERE is_active = TRUE AND role != $1 ORDER BY id';
+    }
+    const result = req.user.role === 'super_admin' ? await pool.query(query) : await pool.query(query, ['super_admin']);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -470,6 +472,10 @@ app.post('/api/users', authMiddleware, adminOrSuper, async (req, res) => {
   try {
     const { username, name, role, dept } = req.body;
     if (!username) return res.status(400).json({ error: 'Username required' });
+
+    if (req.user.role !== 'super_admin' && (req.body.role === 'admin' || req.body.role === 'super_admin')) {
+      return res.status(403).json({ error: 'لا يمكنك منح هذه الصلاحية — تواصل مع المدير الرئيسي' });
+    }
 
     const tempPassword = generatePassword();
     const hashed = await bcrypt.hash(tempPassword, 10);
@@ -488,6 +494,24 @@ app.post('/api/users', authMiddleware, adminOrSuper, async (req, res) => {
 
 app.put('/api/users/:id', authMiddleware, adminOrSuper, async (req, res) => {
   try {
+    const targetUser = await pool.query('SELECT role FROM users WHERE id = $1', [req.params.id]);
+    if (targetUser.rows.length > 0 && targetUser.rows[0].role === 'super_admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({ error: 'لا يمكن تعديل المدير الرئيسي' });
+    }
+    // Prevent admin from editing other admin users
+    if (targetUser.rows[0].role === 'admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({ error: 'لا يمكن تعديل مدير نظام آخر — تواصل مع المدير الرئيسي' });
+    }
+    // Prevent demoting the last super_admin
+    if (targetUser.rows[0].role === 'super_admin' && req.body.role !== 'super_admin') {
+      const superCount = await pool.query("SELECT COUNT(*) as count FROM users WHERE role = 'super_admin' AND is_active = TRUE");
+      if (parseInt(superCount.rows[0].count) <= 1) {
+        return res.status(400).json({ error: 'لا يمكن تغيير دور المدير الرئيسي الوحيد — يجب وجود مدير رئيسي واحد على الأقل' });
+      }
+    }
+    if (req.user.role !== 'super_admin' && (req.body.role === 'admin' || req.body.role === 'super_admin')) {
+      return res.status(403).json({ error: 'لا يمكنك منح هذه الصلاحية — تواصل مع المدير الرئيسي' });
+    }
     const { name, role, dept, password, reset_password } = req.body;
     if (reset_password) {
       const tempPassword = generatePassword();
@@ -525,11 +549,13 @@ app.put('/api/users/:id', authMiddleware, adminOrSuper, async (req, res) => {
 app.delete('/api/users/:id', authMiddleware, superAdminOnly, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
-    if (userId === 1) return res.status(400).json({ error: 'لا يمكن حذف المدير الرئيسي' });
 
     // Soft delete - deactivate instead of hard delete
     const old = await pool.query('SELECT username, name, role FROM users WHERE id = $1', [userId]);
     if (old.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    if (old.rows[0].role === 'super_admin') {
+      return res.status(403).json({ error: 'لا يمكن تعطيل المدير الرئيسي' });
+    }
 
     await pool.query('UPDATE users SET is_active = FALSE WHERE id = $1', [userId]);
     await logAudit(req.user.id, 'deactivate_user', 'users', userId, old.rows[0], { is_active: false });
