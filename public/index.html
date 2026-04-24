@@ -2228,7 +2228,7 @@ async function renderKpiDeptTracking(){
           '<span style="padding:4px 10px;border-radius:6px;font-size:10px;font-weight:600;background:#E0F7FD;color:#005c75">🟡 جارٍ</span>';
 
         return '<tr style="border-bottom:1px solid var(--line)">' +
-          '<td style="padding:14px;font-weight:600">' + dept + '</td>' +
+          '<td style="padding:14px;font-weight:600">' + escapeHtml(dept) + '</td>' +
           '<td style="padding:14px">' + info.questions.length + ' سؤال</td>' +
           '<td style="padding:14px"><div style="display:flex;align-items:center;gap:8px"><div style="height:6px;background:var(--sand);border-radius:99px;width:100px;overflow:hidden"><div style="height:100%;border-radius:99px;background:' + pctColor + ';width:' + pct + '%"></div></div><span style="font-size:11px;font-weight:600">' + totalUploaded + '/' + info.totalEvidence + '</span></div></td>' +
           '<td style="padding:14px;text-align:center;color:var(--brand-green);font-weight:600">' + info.approved + '</td>' +
@@ -2359,7 +2359,7 @@ function renderDomains(){
       </div>
       <div style="margin-top:10px">
         <label>ملاحظات</label>
-        <textarea onchange="setDomainNotes(${d._i}, this.value)" placeholder="ملاحظات إضافية..." style="width:100%;min-height:60px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;resize:vertical">${(state.domainDetails[d._i]?.notes||'').replace(/</g,'&lt;')}</textarea>
+        <textarea onchange="setDomainNotes(${d._i}, this.value)" placeholder="ملاحظات إضافية..." style="width:100%;min-height:60px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;resize:vertical">${escapeHtml(state.domainDetails[d._i]?.notes||'')}</textarea>
       </div>
     </div>`;
   }).join('');
@@ -3153,10 +3153,10 @@ async function renderUsers(){
         <tbody>
           ${users.map((u,i) => '<tr style="border-bottom:1px solid #eee">' +
             '<td style="padding:12px 16px">' + (i+1) + '</td>' +
-            '<td style="padding:12px 16px;font-weight:600">' + (u.name || '—') + '</td>' +
-            '<td style="padding:12px 16px;direction:ltr;font-family:monospace">' + u.username + '</td>' +
+            '<td style="padding:12px 16px;font-weight:600">' + (escapeHtml(u.name) || '—') + '</td>' +
+            '<td style="padding:12px 16px;direction:ltr;font-family:monospace">' + escapeHtml(u.username) + '</td>' +
             '<td style="padding:12px 16px"><span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;' + (u.role==='super_admin'?'background:#fbe8e5;color:#a8331f':u.role==='admin'?'background:#F5F0FA;color:#552F91':'background:#E0F7FD;color:#005c75') + '">' + (u.role==='super_admin'?'مدير رئيسي':u.role==='admin'?'مدير النظام':'إدارة') + '</span></td>' +
-            '<td style="padding:12px 16px">' + ((u.role === 'admin' || u.role === 'super_admin') ? '—' : (u.dept || '—')) + '</td>' +
+            '<td style="padding:12px 16px">' + ((u.role === 'admin' || u.role === 'super_admin') ? '—' : (escapeHtml(u.dept) || '—')) + '</td>' +
             '<td style="padding:12px 16px;font-size:12px;color:#757575">' + (u.created_at ? new Date(u.created_at).toLocaleDateString('ar-SA') : '—') + '</td>' +
             '<td style="padding:12px 16px;font-size:12px;color:#757575">' + (u.last_login_at ? new Date(u.last_login_at).toLocaleString('ar-SA') : 'لم يسجل دخول') + '</td>' +
             '<td style="padding:12px 16px;text-align:center">' +
@@ -3402,8 +3402,8 @@ async function renderDeptDashboard(){
 
       return '<div style="background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;border-top:4px solid ' + pillarColor + '">' +
         '<div style="padding:14px 18px;border-bottom:1px solid var(--line);background:linear-gradient(to left,#fff,var(--sand))">' +
-          '<div style="font-size:11px;color:var(--muted);font-weight:600">' + d.pillar + ' · ' + d.sub + '</div>' +
-          '<div style="font-family:Tajawal;font-weight:800;font-size:16px;color:var(--ink);margin-top:4px">' + d.name + '</div>' +
+          '<div style="font-size:11px;color:var(--muted);font-weight:600">' + escapeHtml(d.pillar) + ' · ' + escapeHtml(d.sub) + '</div>' +
+          '<div style="font-family:Tajawal;font-weight:800;font-size:16px;color:var(--ink);margin-top:4px">' + escapeHtml(d.name) + '</div>' +
         '</div>' +
         '<div style="padding:16px 18px;display:grid;gap:14px">' +
           '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">' +
@@ -3463,8 +3463,8 @@ async function renderDeptQuestions(){
           '<div style="font-size:12px;line-height:1.7;color:var(--ink)">'+lv.evidence+'</div>' +
           '<div style="text-align:center">' +
             '<div style="font-size:11px;font-weight:600;color:'+statusColors[status]+'">'+statusLabels[status]+'</div>' +
-            (fileName ? '<div style="font-size:10px;color:var(--muted);margin-top:3px">📎 '+fileName+'</div>' : '') +
-            (ev && ev.review_notes ? '<div style="font-size:10px;color:var(--bad);margin-top:3px">💬 '+ev.review_notes+'</div>' : '') +
+            (fileName ? '<div style="font-size:10px;color:var(--muted);margin-top:3px">📎 '+escapeHtml(fileName)+'</div>' : '') +
+            (ev && ev.review_notes ? '<div style="font-size:10px;color:var(--bad);margin-top:3px">💬 '+escapeHtml(ev.review_notes)+'</div>' : '') +
           '</div>' +
           '<div style="text-align:center">' +
             (status === 'approved' ? '<span style="color:var(--brand-green);font-weight:700;font-size:12px">✅ معتمد</span>' :
@@ -3601,13 +3601,13 @@ async function renderEvidenceReview(){
         const fileSize = ev.file_size ? (ev.file_size > 1024*1024 ? (ev.file_size/1024/1024).toFixed(1)+' MB' : Math.round(ev.file_size/1024)+' KB') : '';
 
         return '<tr style="border-bottom:1px solid var(--line);background:' + bgColor + '">' +
-          '<td style="padding:12px 14px;font-weight:600">' + dept + '</td>' +
+          '<td style="padding:12px 14px;font-weight:600">' + escapeHtml(dept) + '</td>' +
           '<td style="padding:12px 14px"><span style="font-family:monospace;font-size:10px;background:var(--brand-purple);color:#fff;padding:2px 8px;border-radius:4px;font-weight:600">' + ev.question_code + '</span></td>' +
           '<td style="padding:12px 14px"><span class="level-tag lvl-' + ev.level + '" style="font-size:11px">L' + ev.level + '</span></td>' +
-          '<td style="padding:12px 14px"><div style="font-weight:600">📎 ' + (ev.file_name || '—') + '</div>' + (fileSize ? '<div style="font-size:10px;color:var(--muted);margin-top:2px">' + fileSize + '</div>' : '') + '</td>' +
+          '<td style="padding:12px 14px"><div style="font-weight:600">📎 ' + (escapeHtml(ev.file_name) || '—') + '</div>' + (fileSize ? '<div style="font-size:10px;color:var(--muted);margin-top:2px">' + fileSize + '</div>' : '') + '</td>' +
           '<td style="padding:12px 14px;font-size:11px;color:var(--muted)">' + uploadDate + '</td>' +
           '<td style="padding:12px 14px"><span style="padding:4px 10px;border-radius:6px;font-size:10px;font-weight:600;background:' + statusColors[ev.status] + ';color:' + statusTextColors[ev.status] + '">' + statusLabels[ev.status] + '</span>' +
-            (ev.review_notes ? '<div style="font-size:10px;color:var(--bad);margin-top:4px">💬 ' + ev.review_notes + '</div>' : '') + '</td>' +
+            (ev.review_notes ? '<div style="font-size:10px;color:var(--bad);margin-top:4px">💬 ' + escapeHtml(ev.review_notes) + '</div>' : '') + '</td>' +
           '<td style="padding:12px 14px;text-align:center"><div style="display:flex;gap:4px;justify-content:center">' +
             '<button onclick="downloadFile(\'' + (ev.file_path ? ev.file_path.split('/').pop() : '') + '\')" style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:#E0F7FD;color:#005c75;border:1px solid #9ee5f6;cursor:pointer">📥</button>' +
             (ev.status === 'uploaded' ?
@@ -3762,6 +3762,11 @@ function copyToClipboard(text){
   });
 }
 
+function escapeHtml(str){
+  if(typeof str !== 'string') return str || '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 function authFetch(url, opts){
   opts = opts || {};
   const token = sessionStorage.getItem('naii_token');
@@ -3911,7 +3916,7 @@ function renderKpiDepts(){
     return `
       <div class="dept-perf-card">
         <div class="dept-perf-header">
-          <h4>${dept.name}</h4>
+          <h4>${escapeHtml(dept.name)}</h4>
           <div class="dept-perf-score" style="color:${scoreColor}">${dept.avg===null ? '—' : dept.avg.toFixed(2)}</div>
         </div>
         <div class="dept-perf-grid">
@@ -3932,7 +3937,7 @@ function renderKpiDepts(){
             <span class="dept-perf-val">${dept.evDone}/${dept.evTotal} (${evPct}%)</span>
           </div>
         </div>
-        ${dept.barriers ? `<div class="dept-perf-barriers"><b>المعوقات:</b> ${dept.barriers}</div>` : ''}
+        ${dept.barriers ? `<div class="dept-perf-barriers"><b>المعوقات:</b> ${escapeHtml(dept.barriers)}</div>` : ''}
         <div class="dept-perf-domains">
           ${dept.domains.map(d => `<span class="dept-dom-chip ${d.avgScore!==null?'assessed':''}" title="${d.sub} – ${d.name}">${d.name} ${d.avgScore!==null?'<b>L'+Math.round(d.avgScore)+'</b>':''}</span>`).join('')}
         </div>
