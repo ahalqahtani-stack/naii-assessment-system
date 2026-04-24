@@ -9,10 +9,6 @@
 cp .env.example .env
 docker compose up -d
 
-## Default Admin
-- Username: admin
-- Password: admin123
-
 ## Architecture
 - server.js — Express API (26 endpoints)
 - public/index.html — SPA Frontend
