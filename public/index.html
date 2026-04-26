@@ -4258,7 +4258,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           );
           if (idx !== -1) {
             if (d.dept) state.domains[idx].dept = d.dept;
-            if (d.current_level !== null) state.domains[idx].current = d.current_level;
+            if (d.current_level !== null && d.current_level !== undefined) state.domains[idx].current = d.current_level;
             if (!state.domainDetails[idx]) state.domainDetails[idx] = {};
             if (d.target_level !== null && d.target_level !== undefined) state.domainDetails[idx].target = d.target_level;
             if (d.barriers) state.domainDetails[idx].barriers = d.barriers;
