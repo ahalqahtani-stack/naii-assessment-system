@@ -1,7 +1,11 @@
 -- ============================================================
--- NAII Assessment System — Database Schema
--- Version: 1.0
+-- NAII Assessment System — Complete Database Schema
+-- Version: 1.1
 -- Date: April 2026
+--
+-- This is the SINGLE SOURCE OF TRUTH for the database schema.
+-- For fresh installs: run this file directly.
+-- For existing installs: run db/upgrade.sql instead.
 -- ============================================================
 
 -- 1. USERS
@@ -39,6 +43,7 @@ CREATE TABLE IF NOT EXISTS domains (
   target_level INTEGER CHECK (target_level >= 0 AND target_level <= 5),
   barriers TEXT,
   notes TEXT,
+  responsible VARCHAR(200),
   updated_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
   updated_at TIMESTAMP DEFAULT NOW(),
   UNIQUE(pillar, sub, name)
@@ -131,11 +136,16 @@ CREATE INDEX IF NOT EXISTS idx_evidence_status ON evidence(status);
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, read);
 CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
 
 -- ============================================================
--- NOTE: Super admin should be created manually on first deploy
--- Do NOT use default admin/admin123 in production
+-- NOTE: Super admin should be created manually on first deploy.
+-- Do NOT use default admin/admin123 in production.
+--
 -- Example:
--- INSERT INTO users (username, password_hash, name, role, is_active, must_change_password)
--- VALUES ('your_username', 'bcrypt_hash_here', 'Your Name', 'super_admin', TRUE, TRUE);
+--   INSERT INTO users (username, password_hash, name, role, is_active, must_change_password)
+--   VALUES ('your_username', 'your_temp_password', 'اسمك', 'super_admin', TRUE, TRUE);
+--
+-- The system will auto-hash the password on first login.
 -- ============================================================

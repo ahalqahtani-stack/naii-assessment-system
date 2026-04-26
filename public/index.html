@@ -37,10 +37,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{font-family:'IBM Plex Sans Arabic','Tajawal',sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased}
-body{background:
-  radial-gradient(1200px 600px at 90% -10%, rgba(85,47,145,.06), transparent 60%),
-  radial-gradient(900px 500px at 10% -20%, rgba(0,195,243,.05), transparent 60%),
-  var(--paper)}
+body{margin:0;background:radial-gradient(ellipse at 50% 0%,#f5f0fa 0%,var(--bg) 70%);font-family:'IBM Plex Sans Arabic','Tajawal','Noto Sans Arabic',system-ui,sans-serif;direction:rtl;color:var(--ink)}
 a{color:inherit}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 .container{max-width:1440px;margin:0 auto;padding:0 28px}
@@ -96,7 +93,7 @@ nav.tabs{
 .tab-icon{width:18px;height:18px;display:inline-block;opacity:.85}
 
 /* SECTIONS */
-main{padding:32px 0 80px}
+main{padding:32px 0 20px}
 .view{display:none;animation:fadeIn .3s ease}
 .view.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -287,9 +284,6 @@ main{padding:32px 0 80px}
 .qa-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow);border-right:4px solid var(--brand-cyan);position:relative}
 .qa-card h4{font-family:'Tajawal';font-size:14.5px;font-weight:700;margin-bottom:8px;color:var(--ink)}
 .qa-card .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
-
-/* Footer */
-footer{padding:30px 0;text-align:center;color:var(--muted);font-size:12.5px;border-top:3px solid var(--brand-purple);margin-top:40px;background:#fff;background-image:linear-gradient(to top, var(--sand), #fff)}
 
 @media (max-width: 1024px){
   .kpis{grid-template-columns:repeat(2,1fr)}
@@ -885,12 +879,12 @@ footer{padding:30px 0;text-align:center;color:var(--muted);font-size:12.5px;bord
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
     <span id="notifCount" style="display:none;position:absolute;top:-6px;right:-6px;background:#e24b4a;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;min-width:16px;text-align:center"></span>
   </div>
-  <div id="notifPanel" style="display:none;position:absolute;top:60px;left:20px;width:360px;max-height:400px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.15);z-index:9998">
-    <div style="padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
-      <span style="font-family:Tajawal;font-weight:700;font-size:14px;color:var(--ink)">الإشعارات</span>
-      <button onclick="markAllRead()" style="font-size:11px;color:var(--brand-purple);background:none;border:none;cursor:pointer;font-weight:600">تعيين الكل كمقروء</button>
+  <div id="notifPanel" style="display:none;position:fixed;top:70px;left:50%;transform:translateX(-50%);width:420px;max-height:500px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.2);z-index:9999">
+    <div style="padding:14px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;border-radius:16px 16px 0 0;z-index:1">
+      <span style="font-family:Tajawal;font-weight:800;font-size:15px;color:var(--ink)">الإشعارات</span>
+      <button onclick="markAllRead()" style="font-size:11px;color:var(--brand-purple);background:none;border:none;cursor:pointer;font-weight:600">✓ تعيين الكل كمقروء</button>
     </div>
-    <div id="notifList" style="padding:8px"></div>
+    <div id="notifList"></div>
   </div>
   <span id="headerUserName" style="font-size:13px;color:rgba(255,255,255,.85)"></span>
   <button onclick="doLogout()" style="padding:6px 14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:7px;font-family:inherit;font-size:12px;cursor:pointer;color:#fff;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">تسجيل الخروج ↩</button>
@@ -1524,6 +1518,17 @@ footer{padding:30px 0;text-align:center;color:var(--muted);font-size:12.5px;bord
   <div id="deptDashContent"></div>
 </section>
 
+<section class="view" id="view-dept-domains">
+  <div class="section-head">
+    <div>
+      <span class="kicker">Domain Management · Read Only</span>
+      <h2>المجالات المُسندة لإدارتك</h2>
+      <p class="sub">عرض المجالات المُسندة لإدارتك مع تفاصيل التقييم والمستهدفات والأسئلة المرتبطة.</p>
+    </div>
+  </div>
+  <div id="deptDomainsContent"></div>
+</section>
+
 <section class="view" id="view-dept-questions">
   <div class="section-head">
     <div>
@@ -1537,7 +1542,7 @@ footer{padding:30px 0;text-align:center;color:var(--muted);font-size:12.5px;bord
 
 </main>
 
-<footer style="position:fixed;bottom:0;left:0;right:0;text-align:center;padding:14px 20px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);background:#fff;z-index:100">
+<footer style="text-align:center;padding:14px 20px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);background:#fff;margin-top:40px">
   <div>© 2026 المركز الوطني للتعلم الإلكتروني (NeLC) · جميع الحقوق محفوظة</div>
   <div style="margin-top:4px;font-size:11px;color:#bbb">تطوير إدارة البنية المؤسسية · الإصدار 1.0</div>
 </footer>
@@ -1687,6 +1692,7 @@ const TABS = [
   {id:'plan', label:'خطة إدارة المؤشر', icon:'⟶'},
   {id:'users', label:'إدارة المستخدمين', icon:'👤'},
   {id:'dept-dashboard', label:'لوحة معلوماتي', icon:'◧'},
+  {id:'dept-domains', label:'المجالات المُسندة', icon:'◫'},
   {id:'dept-questions', label:'أسئلتي والأدلة', icon:'📋'}
 ];
 
@@ -1703,13 +1709,13 @@ function buildTabs(){
   if(user && user.role !== 'admin' && user.role !== 'super_admin'){
     document.querySelectorAll('[data-tab]').forEach(t => {
       const tabId = t.getAttribute('data-tab');
-      if(!['about','dept-dashboard','dept-questions'].includes(tabId)) t.style.display = 'none';
+      if(!['about','dept-dashboard','dept-domains','dept-questions'].includes(tabId)) t.style.display = 'none';
     });
     switchTab('dept-dashboard');
   } else if(user) {
     document.querySelectorAll('[data-tab]').forEach(t => {
       const tabId = t.getAttribute('data-tab');
-      if(['dept-dashboard','dept-questions'].includes(tabId)) t.style.display = 'none';
+      if(['dept-dashboard','dept-domains','dept-questions'].includes(tabId)) t.style.display = 'none';
     });
   }
 }
@@ -1726,6 +1732,7 @@ function switchTab(id){
   if(id==='plan') renderPlan();
   if(id==='users') renderUsers();
   if(id==='dept-dashboard') renderDeptDashboard();
+  if(id==='dept-domains') renderDeptDomains();
   if(id==='dept-questions') renderDeptQuestions();
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -3355,6 +3362,61 @@ async function reactivateUser(id, name){
   } catch(e){ alert('خطأ: ' + e.message); }
 }
 
+async function renderDeptDomains(){
+  var user = getCurrentUser();
+  if(!user) return;
+  var el = document.getElementById('deptDomainsContent');
+  if(!el) return;
+
+  var myDomains = state.domains.filter(function(d){ return d.dept === user.dept; });
+
+  if(myDomains.length === 0){
+    el.innerHTML = '<div class="empty-state"><div class="ico">∅</div>لا توجد مجالات مُسندة لإدارتك</div>';
+    return;
+  }
+
+  el.innerHTML = '<div class="dm-grid">' +
+    myDomains.map(function(d){
+      var dIdx = state.domains.indexOf(d);
+      var details = state.domainDetails[dIdx] || {};
+      var target = details.target;
+      var gap = (d.current !== null && target !== null && target !== undefined) ? Math.max(0, target - d.current) : null;
+      var qs = getDomainQuestions(d);
+      var ans = qs.filter(function(q){ return q.current !== null; });
+      var pillarColor = d.pillar === 'التوجهات' ? 'var(--brand-purple)' : d.pillar === 'الممكنات' ? 'var(--brand-cyan)' : 'var(--brand-green)';
+
+      return '<div class="dm-card" style="border-top:4px solid ' + pillarColor + '">' +
+        '<div class="dm-card-top">' +
+          '<div class="dm-meta">' + escapeHtml(d.pillar) + ' · ' + escapeHtml(d.sub) + '</div>' +
+          '<h4 class="dm-title">' + escapeHtml(d.name) + '</h4>' +
+        '</div>' +
+        '<div class="dm-fields">' +
+          '<div class="dm-row3">' +
+            '<div class="dm-field"><label>الحالي</label><div class="dm-val-box ' + (d.current === null ? 'dm-na' : '') + '">' + (d.current !== null ? 'L' + d.current : '—') + '</div></div>' +
+            '<div class="dm-field"><label>المستهدف</label><div class="dm-val-box ' + (target === null || target === undefined ? 'dm-na' : '') + '">' + (target !== null && target !== undefined ? 'L' + target : '—') + '</div></div>' +
+            '<div class="dm-field"><label>الفجوة</label><div class="dm-val-box ' + (gap !== null && gap > 0 ? 'dm-gap-warn' : '') + '">' + (gap === null ? '—' : gap > 0 ? '+' + gap : '0') + '</div></div>' +
+          '</div>' +
+          (details.responsible ? '<div class="dm-field" style="margin-top:10px"><label>المسؤول عن المعيار</label><div style="padding:8px 10px;background:var(--sand);border-radius:6px;font-size:13px;color:var(--ink)">' + escapeHtml(details.responsible) + '</div></div>' : '') +
+          (details.barriers ? '<div class="dm-field" style="margin-top:10px"><label>المعوقات</label><div style="padding:8px 10px;background:#fef9ee;border-radius:6px;font-size:13px;color:#735c0e;border-right:3px solid var(--warn)">' + escapeHtml(details.barriers) + '</div></div>' : '') +
+          (details.notes ? '<div class="dm-field" style="margin-top:10px"><label>ملاحظات</label><div style="padding:8px 10px;background:var(--sand);border-radius:6px;font-size:13px;color:var(--ink)">' + escapeHtml(details.notes) + '</div></div>' : '') +
+          '<div class="dm-linked-qs" style="margin-top:12px">' +
+            '<label>الأسئلة المرتبطة (' + ans.length + '/' + qs.length + ' مُجابة)</label>' +
+            qs.map(function(q){
+              return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:' + (q.current !== null ? '#f0faf3' : 'var(--sand)') + ';border-radius:8px;border:1px solid var(--line);margin-top:6px' + (q.current !== null ? ';border-right:3px solid var(--brand-green)' : '') + '">' +
+                '<div style="flex:1">' +
+                  '<span style="font-family:monospace;font-size:11px;background:var(--brand-purple);color:#fff;padding:3px 10px;border-radius:5px;font-weight:600">' + q.code + '</span>' +
+                  '<span style="font-size:11px;color:var(--muted);margin-right:8px">' + escapeHtml(q.q.substring(0,60)) + '...</span>' +
+                '</div>' +
+                '<span style="font-family:Tajawal;font-weight:700;font-size:13px;color:' + (q.current !== null ? 'var(--brand-purple)' : 'var(--muted)') + '">' + (q.current !== null ? 'L' + q.current : 'لم يُقيَّم') + '</span>' +
+              '</div>';
+            }).join('') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('') +
+  '</div>';
+}
+
 async function renderDeptDashboard(){
   const user = getCurrentUser();
   if(!user) return;
@@ -3432,7 +3494,7 @@ async function renderDeptDashboard(){
 
     '<h3 class="kpi-section-title">③ المجالات المُسندة لإدارتك</h3>' +
 
-    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;grid-auto-rows:auto">' +
     myDomains.map(d => {
       const qs = getDomainQuestions(d);
       const ans = qs.filter(q => q.current !== null);
@@ -3742,37 +3804,89 @@ async function loadNotifications(){
 }
 
 async function toggleNotifications(){
-  const panel = document.getElementById('notifPanel');
+  var panel = document.getElementById('notifPanel');
   if(panel.style.display === 'none' || !panel.style.display){
     panel.style.display = 'block';
-    if(!getCurrentUser()) return;
     try {
-      const res = await authFetch('/api/notifications');
+      var res = await authFetch('/api/notifications');
       if(res.ok){
-        const notifs = await res.json();
-        const list = document.getElementById('notifList');
+        var notifs = await res.json();
+        var list = document.getElementById('notifList');
         if(notifs.length === 0){
-          list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">لا توجد إشعارات</div>';
+          list.innerHTML = '<div style="padding:40px 20px;text-align:center"><div style="font-size:28px;margin-bottom:8px">🔔</div><div style="color:var(--muted);font-size:13px">لا توجد إشعارات</div></div>';
         } else {
-          list.innerHTML = notifs.map(n => '<div style="padding:10px 12px;border-bottom:1px solid var(--line);font-size:12px;line-height:1.6' + (!n.read ? ';background:#f5f0fa' : '') + '">' +
-            '<div style="color:var(--ink)">' + n.message + '</div>' +
-            '<div style="font-size:10px;color:var(--muted);margin-top:4px">' + new Date(n.created_at).toLocaleString('ar-SA') + '</div>' +
-          '</div>').join('');
+          list.innerHTML = notifs.map(function(n){
+            var timeAgo = getTimeAgo(n.created_at);
+            var isUnread = !n.read;
+            var icon = n.type === 'evidence_uploaded' ? '📎' : n.type === 'evidence_approved' ? '✅' : n.type === 'evidence_rejected' ? '❌' : '🔔';
+            return '<div onclick="markOneRead(' + n.id + ',this)" style="padding:14px 20px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s;' + (isUnread ? 'background:#f5f0fa;border-right:3px solid var(--brand-purple)' : 'background:#fff') + '">' +
+              '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">' +
+                '<div style="flex:1">' +
+                  '<div style="font-size:13px;color:var(--ink);line-height:1.7;font-weight:' + (isUnread ? '600' : '400') + '">' + icon + ' ' + escapeHtml(n.message) + '</div>' +
+                  '<div style="font-size:11px;color:var(--muted);margin-top:4px">' + timeAgo + '</div>' +
+                '</div>' +
+                (isUnread ? '<div style="width:8px;height:8px;background:var(--brand-purple);border-radius:50%;flex-shrink:0;margin-top:6px"></div>' : '') +
+              '</div>' +
+            '</div>';
+          }).join('');
         }
       }
-    } catch(e){}
+    } catch(e){ console.error(e); }
+
+    // Close when clicking outside
+    setTimeout(function(){
+      document.addEventListener('click', closeNotifOnClickOutside);
+    }, 100);
   } else {
     panel.style.display = 'none';
+    document.removeEventListener('click', closeNotifOnClickOutside);
   }
 }
 
-async function markAllRead(){
-  if(!getCurrentUser()) return;
+function closeNotifOnClickOutside(e){
+  var panel = document.getElementById('notifPanel');
+  var bell = document.getElementById('notifBell');
+  if(panel && bell && !panel.contains(e.target) && !bell.contains(e.target)){
+    panel.style.display = 'none';
+    document.removeEventListener('click', closeNotifOnClickOutside);
+  }
+}
+
+async function markOneRead(id, el){
   try {
-    await authFetch('/api/notifications/read-all', { method: 'PUT' });
+    await authFetch('/api/notifications/' + id + '/read', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({})
+    });
+    if(el){
+      el.style.background = '#fff';
+      el.style.borderRight = 'none';
+      el.style.fontWeight = '400';
+      var dot = el.querySelector('div[style*="border-radius:50%"]');
+      if(dot) dot.remove();
+    }
+    loadNotifications();
+  } catch(e){ console.error(e); }
+}
+
+async function markAllRead(){
+  try {
+    await authFetch('/api/notifications/read-all', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({})
+    });
     document.getElementById('notifCount').style.display = 'none';
-    toggleNotifications();
-  } catch(e){}
+    // Re-render to show all as read (don't hide panel)
+    var items = document.querySelectorAll('#notifList > div');
+    items.forEach(function(el){
+      el.style.background = '#fff';
+      el.style.borderRight = 'none';
+      var dot = el.querySelector('div[style*="border-radius:50%"]');
+      if(dot) dot.remove();
+    });
+  } catch(e){ console.error(e); }
 }
 
 function doLogin(){
@@ -3829,6 +3943,18 @@ function copyToClipboard(text){
     document.body.removeChild(ta);
     alert('تم النسخ بنجاح');
   });
+}
+
+function getTimeAgo(dateStr){
+  if(!dateStr) return '';
+  var now = new Date();
+  var date = new Date(dateStr);
+  var diff = Math.floor((now - date) / 1000);
+  if(diff < 60) return 'الآن';
+  if(diff < 3600) return 'منذ ' + Math.floor(diff/60) + ' دقيقة';
+  if(diff < 86400) return 'منذ ' + Math.floor(diff/3600) + ' ساعة';
+  if(diff < 604800) return 'منذ ' + Math.floor(diff/86400) + ' يوم';
+  return date.toLocaleDateString('ar-SA');
 }
 
 function escapeHtml(str){

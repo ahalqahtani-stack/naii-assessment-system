@@ -5,9 +5,14 @@
 ## Requirements
 - Docker & Docker Compose
 
-## Quick Start
-cp .env.example .env
+## Fresh Install
+cp .env.example .env    # edit with real credentials
 docker compose up -d
+# Create super admin:
+docker exec naii-backend-db-1 psql -U naii_user -d naii_db -c "INSERT INTO users (username, password_hash, name, role, is_active, must_change_password) VALUES ('admin', 'YourTempPass@1', 'مدير النظام', 'super_admin', TRUE, TRUE);"
+
+## Upgrade Existing Database
+docker exec -i naii-backend-db-1 psql -U naii_user -d naii_db < db/upgrade.sql
 
 ## Architecture
 - server.js — Express API (26 endpoints)

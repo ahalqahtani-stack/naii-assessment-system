@@ -50,9 +50,6 @@ const pool = new Pool({
   password: process.env.DB_PASS
 });
 
-// Auto-migrations (idempotent)
-pool.query('ALTER TABLE domains ADD COLUMN IF NOT EXISTS responsible VARCHAR(200)').catch(() => {});
-
 // File upload config
 const uploadDir = process.env.UPLOAD_DIR || './uploads';
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
