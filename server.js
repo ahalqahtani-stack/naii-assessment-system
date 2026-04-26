@@ -50,6 +50,9 @@ const pool = new Pool({
   password: process.env.DB_PASS
 });
 
+// Auto-migrations (idempotent)
+pool.query('ALTER TABLE domains ADD COLUMN IF NOT EXISTS responsible VARCHAR(200)').catch(() => {});
+
 // File upload config
 const uploadDir = process.env.UPLOAD_DIR || './uploads';
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
@@ -266,11 +269,11 @@ app.put('/api/domains', authMiddleware, async (req, res) => {
     if (!Array.isArray(domains)) return res.status(400).json({ error: 'Invalid data' });
     for (const d of domains) {
       await pool.query(
-        `INSERT INTO domains (pillar, sub, name, dept, current_level, target_level, barriers, notes, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+        `INSERT INTO domains (pillar, sub, name, dept, current_level, target_level, barriers, notes, responsible, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
          ON CONFLICT (pillar, sub, name) DO UPDATE SET
-           dept = $4, current_level = $5, target_level = $6, barriers = $7, notes = $8, updated_at = NOW()`,
-        [d.pillar, d.sub, d.name, d.dept, d.current_level, d.target_level, d.barriers, d.notes]
+           dept = $4, current_level = $5, target_level = $6, barriers = $7, notes = $8, responsible = $9, updated_at = NOW()`,
+        [d.pillar, d.sub, d.name, d.dept, d.current_level, d.target_level, d.barriers, d.notes, d.responsible || '']
       );
     }
     res.json({ success: true, count: domains.length });
@@ -392,6 +395,19 @@ app.put('/api/evidence/:id/approve', authMiddleware, adminOrSuper, async (req, r
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+app.put('/api/evidence/:id/revert', authMiddleware, adminOrSuper, async (req, res) => {
+  try {
+    var old = await pool.query('SELECT * FROM evidence WHERE id = $1', [req.params.id]);
+    if (old.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    var result = await pool.query(
+      "UPDATE evidence SET status = 'uploaded', reviewed_by = NULL, review_notes = NULL, reviewed_at = NULL, updated_at = NOW() WHERE id = $1 RETURNING *",
+      [req.params.id]
+    );
+    await logAudit(req.user.id, 'revert_evidence', 'evidence', parseInt(req.params.id), { status: old.rows[0].status }, { status: 'uploaded' });
+    res.json({ success: true, evidence: result.rows[0] });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.put('/api/evidence/:id/reject', authMiddleware, adminOrSuper, async (req, res) => {

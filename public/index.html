@@ -1339,19 +1339,20 @@ footer{padding:30px 0;text-align:center;color:var(--muted);font-size:12.5px;bord
     </div>
 
     <div class="filter-bar">
-      <label>تصفية بالركيزة:</label>
-      <select id="filterPillar" onchange="renderDomains()">
+      <label>الركيزة:</label>
+      <select id="dmFilterPillar" onchange="renderDomains()">
         <option value="">الكل</option>
-        <option>التوجهات</option><option>الممكنات</option><option>المخرجات</option>
+        <option>التوجهات</option>
+        <option>الممكنات</option>
+        <option>المخرجات</option>
+      </select>
+      <label>المحور:</label>
+      <select id="dmFilterAxis" onchange="renderDomains()">
+        <option value="">الكل</option>
       </select>
       <label>الإدارة:</label>
-      <select id="filterDept" onchange="renderDomains()">
+      <select id="dmFilterDept" onchange="renderDomains()">
         <option value="">الكل</option>
-      </select>
-      <label>الأولوية:</label>
-      <select id="filterPrio" onchange="renderDomains()">
-        <option value="">الكل</option>
-        <option>عالية</option><option>متوسطة</option><option>منخفضة</option>
       </select>
     </div>
 
@@ -1536,7 +1537,7 @@ footer{padding:30px 0;text-align:center;color:var(--muted);font-size:12.5px;bord
 
 </main>
 
-<footer style="text-align:center;padding:18px 20px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);background:#fff;margin-top:auto">
+<footer style="position:fixed;bottom:0;left:0;right:0;text-align:center;padding:14px 20px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);background:#fff;z-index:100">
   <div>© 2026 المركز الوطني للتعلم الإلكتروني (NeLC) · جميع الحقوق محفوظة</div>
   <div style="margin-top:4px;font-size:11px;color:#bbb">تطوير إدارة البنية المؤسسية · الإصدار 1.0</div>
 </footer>
@@ -1643,7 +1644,8 @@ async function saveToAPI() {
       dept: d.dept, current_level: d.current,
       target_level: state.domainDetails?.[state.domains.indexOf(d)]?.target ?? null,
       barriers: state.domainDetails?.[state.domains.indexOf(d)]?.barriers || '',
-      notes: state.domainDetails?.[state.domains.indexOf(d)]?.notes || ''
+      notes: state.domainDetails?.[state.domains.indexOf(d)]?.notes || '',
+      responsible: state.domainDetails?.[state.domains.indexOf(d)]?.responsible || ''
     }));
     await authFetch('/api/domains', {
       method: 'PUT',
@@ -2283,19 +2285,34 @@ function renderKpiSwot(){
    DOMAINS VIEW
    ============================================================ */
 function renderDomains(){
-  // populate dept filter
-  const fd = document.getElementById('filterDept');
-  if(fd && fd.options.length <= 1){
-    DEPARTMENTS.forEach(d => fd.add(new Option(d, d)));
+  const fp = document.getElementById('dmFilterPillar')?.value || '';
+  const fa = document.getElementById('dmFilterAxis')?.value || '';
+  const fd = document.getElementById('dmFilterDept')?.value || '';
+
+  // Populate axis filter based on pillar
+  const faEl = document.getElementById('dmFilterAxis');
+  if(faEl){
+    const axes = new Set();
+    state.domains.forEach(d => { if(!fp || d.pillar===fp) axes.add(d.sub); });
+    const cur = faEl.value;
+    faEl.innerHTML = '<option value="">الكل</option>' + [...axes].map(a => '<option '+(a===cur?'selected':'')+'>'+a+'</option>').join('');
+    if(![...axes].includes(cur)) faEl.value = '';
   }
-  const fp = document.getElementById('filterPillar').value;
-  const fdv = document.getElementById('filterDept').value;
-  const fpr = document.getElementById('filterPrio').value;
+
+  // Populate dept filter (once)
+  const fdEl = document.getElementById('dmFilterDept');
+  if(fdEl && fdEl.children.length <= 1){
+    fdEl.innerHTML = '<option value="">الكل</option>' + DEPT_GROUPS.map(g =>
+      '<optgroup label="'+g.sector+'">' + g.depts.map(d => '<option>'+d+'</option>').join('') + '</optgroup>'
+    ).join('');
+  }
 
   const grid = document.getElementById('domainsGrid');
-  const filtered = state.domains.map((d,i)=>({...d,_i:i})).filter(d =>
-    (!fp || d.pillar===fp) && (!fdv || d.dept===fdv) && (!fpr || d.prio===fpr)
-  );
+  let list = state.domains.map((d,i) => ({...d, _i:i}));
+  if(fp) list = list.filter(d => d.pillar === fp);
+  if(fa) list = list.filter(d => d.sub === fa);
+  if(fd) list = list.filter(d => d.dept === fd);
+  const filtered = list;
 
   if(filtered.length===0){
     grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="ico">∅</div>لا توجد نتائج تطابق التصفية</div>';
@@ -2343,24 +2360,30 @@ function renderDomains(){
           ${deptOptions(d.dept)}
         </select>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)">
-        <div>
-          <label style="display:inline">الأولوية:</label>
-          <select class="lvl-select" style="display:inline-block;width:auto;padding:4px 8px;font-size:12px" onchange="updateDomain(${d._i},'prio',this.value)">
-            <option value="" ${!d.prio?'selected':''}>— لم تُحدد —</option>
-            <option ${d.prio==='عالية'?'selected':''}>عالية</option>
-            <option ${d.prio==='متوسطة'?'selected':''}>متوسطة</option>
-            <option ${d.prio==='منخفضة'?'selected':''}>منخفضة</option>
-          </select>
-        </div>
-        ${d.prio?`<span class="priority pr-${d.prio==='عالية'?'h':d.prio==='متوسطة'?'m':'l'}">${d.prio}</span>`:`<span style="font-size:11px;color:var(--muted);font-style:italic">لم تُحدد</span>`}
-      </div>
+      <div class="dm-field" style="margin-top:8px"><label>المسؤول عن المعيار</label><input type="text" class="dm-textarea" style="min-height:auto;padding:8px 10px;width:100%;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px" placeholder="اسم المسؤول..." value="${escapeHtml(state.domainDetails[d._i]?.responsible || '')}" onchange="setDomainResponsible(${d._i},this.value)"></div>
       <div style="margin-top:10px">
         <label>ملاحظات</label>
         <textarea onchange="setDomainNotes(${d._i}, this.value)" placeholder="ملاحظات إضافية..." style="width:100%;min-height:60px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;resize:vertical">${escapeHtml(state.domainDetails[d._i]?.notes||'')}</textarea>
       </div>
+      ${(() => {
+        const qs = getDomainQuestions(d);
+        if(qs.length === 0) return '';
+        return '<div class="dm-linked-qs" style="margin-top:10px"><label>الأسئلة المرتبطة (' + qs.filter(q=>q.current!==null).length + '/' + qs.length + ' مُجابة)</label>' +
+          qs.map(q => '<a class="dm-q-link ' + (q.current!==null?'answered':'') + '" href="#" onclick="goToQuestion(' + state.questions.indexOf(q) + ');return false" title="' + escapeHtml(q.q) + '">' +
+            '<span class="dm-q-code">' + q.code + '</span>' +
+            '<span class="dm-q-text" style="font-size:11px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">' + escapeHtml(q.q.substring(0,60)) + '...</span>' +
+            '<span class="dm-q-status">' + (q.current!==null?'L'+q.current:'—') + '</span>' +
+          '</a>').join('') +
+        '</div>';
+      })()}
     </div>`;
   }).join('');
+}
+
+function setDomainResponsible(dIdx, val){
+  if(!state.domainDetails[dIdx]) state.domainDetails[dIdx] = {};
+  state.domainDetails[dIdx].responsible = val;
+  saveState();
 }
 
 function setDomainNotes(dIdx, val){
@@ -2390,7 +2413,13 @@ function getQDept(q){
   return d ? d.dept : '';
 }
 function getDomainQuestions(d){
-  return state.questions.filter(q => q.pillar === d.pillar && getQAxis(q) === d.sub && getQDomain(q) === d.name);
+  return state.questions.filter(q => {
+    const parts = q.area.split(' – ');
+    if(parts.length < 2) return false;
+    const qAxis = parts[0].trim();
+    const qDomain = parts[1].trim();
+    return qAxis === d.sub && qDomain === d.name;
+  });
 }
 
 // Populate axis filter based on pillar
@@ -2491,7 +2520,7 @@ function renderQuestions(){
 
     return `
       <div class="qa-card" id="qa-${q._i}">
-        <div class="qa-head">
+        <div class="qa-head" onclick="toggleQCard(${q._i})" style="cursor:pointer">
           <div class="qa-title">
             <span class="q-code">${q.code}</span>
             <div>
@@ -2506,23 +2535,25 @@ function renderQuestions(){
           </div>
           <div>${answerTag}</div>
         </div>
-        <div class="qa-answers">
-          <div style="font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:10px;letter-spacing:.3px">اختر المستوى الذي ينطبق على وضع المركز حالياً:</div>
-          ${q.levels.map((lv, n) => `
-            <div class="qa-answer ${q.current===n?'selected':''}" onclick="setQuestionAnswer(${q._i}, ${n})">
-              <div class="qa-radio"></div>
-              <div class="qa-answer-body">
-                <div class="qa-answer-head">
-                  <span class="level-tag lvl-${n}">L${n} · ${lv.range}</span>
-                  <b style="font-family:'Tajawal';font-size:13.5px">${lv.name.replace(/^المستوى \d+ – /, '')}</b>
+        <div class="qa-card-body">
+          <div class="qa-answers">
+            <div style="font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:10px;letter-spacing:.3px">اختر المستوى الذي ينطبق على وضع المركز حالياً:</div>
+            ${q.levels.map((lv, n) => `
+              <div class="qa-answer ${q.current===n?'selected':''}" onclick="setQuestionAnswer(${q._i}, ${n})">
+                <div class="qa-radio"></div>
+                <div class="qa-answer-body">
+                  <div class="qa-answer-head">
+                    <span class="level-tag lvl-${n}">L${n} · ${lv.range}</span>
+                    <b style="font-family:'Tajawal';font-size:13.5px">${lv.name.replace(/^المستوى \d+ – /, '')}</b>
+                  </div>
+                  <div class="qa-answer-desc">${lv.desc}</div>
+                  <div class="qa-answer-target"><b>الهدف:</b> ${LEVEL_TARGETS[n]}</div>
+                  ${lv.evidence ? `<div class="qa-answer-evidence"><b>الأدلة الداعمة المطلوبة:</b> ${lv.evidence}</div>` : ''}
                 </div>
-                <div class="qa-answer-desc">${lv.desc}</div>
-                <div class="qa-answer-target"><b>الهدف:</b> ${LEVEL_TARGETS[n]}</div>
-                ${lv.evidence ? `<div class="qa-answer-evidence"><b>الأدلة الداعمة المطلوبة:</b> ${lv.evidence}</div>` : ''}
               </div>
-            </div>
-          `).join('')}
-          ${isAnswered ? `<button class="btn btn-ghost" style="margin-top:10px;font-size:12px;padding:6px 14px" onclick="clearQuestionAnswer(${q._i})">↺ مسح إجابة هذا السؤال</button>` : ''}
+            `).join('')}
+            ${isAnswered ? `<button class="btn btn-ghost" style="margin-top:10px;font-size:12px;padding:6px 14px" onclick="clearQuestionAnswer(${q._i})">↺ مسح إجابة هذا السؤال</button>` : ''}
+          </div>
         </div>
       </div>`;
   }).join('');
@@ -3519,22 +3550,26 @@ async function renderDeptQuestions(){
 }
 
 async function uploadEvidence(questionCode, level){
-  const input = document.createElement('input');
+  var input = document.createElement('input');
   input.type = 'file';
   input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.zip';
-  input.onchange = async (e) => {
-    const file = e.target.files[0];
+  input.onchange = async function(e) {
+    var file = e.target.files[0];
     if(!file) return;
-    const formData = new FormData();
+    if(file.size > 20 * 1024 * 1024){ alert('حجم الملف يتجاوز 20 ميغابايت'); return; }
+    var formData = new FormData();
     formData.append('file', file);
     formData.append('question_code', questionCode);
     formData.append('level', level);
     try {
-      const res = await authFetch('/api/evidence/upload', { method:'POST', body: formData });
-      const result = await res.json();
+      var res = await authFetch('/api/evidence/upload', {
+        method: 'POST',
+        body: formData
+      });
+      var result = await res.json();
       if(result.success){
-        alert('تم رفع الملف بنجاح: ' + file.name);
         renderDeptQuestions();
+        renderDeptDashboard();
       } else {
         alert('خطأ: ' + (result.error || 'فشل الرفع'));
       }
@@ -3619,11 +3654,15 @@ async function renderEvidenceReview(){
           '<td style="padding:12px 14px;font-size:11px;color:var(--muted)">' + uploadDate + '</td>' +
           '<td style="padding:12px 14px"><span style="padding:4px 10px;border-radius:6px;font-size:10px;font-weight:600;background:' + statusColors[ev.status] + ';color:' + statusTextColors[ev.status] + '">' + statusLabels[ev.status] + '</span>' +
             (ev.review_notes ? '<div style="font-size:10px;color:var(--bad);margin-top:4px">💬 ' + escapeHtml(ev.review_notes) + '</div>' : '') + '</td>' +
-          '<td style="padding:12px 14px;text-align:center"><div style="display:flex;gap:4px;justify-content:center">' +
-            '<button onclick="downloadFile(\'' + (ev.file_path ? ev.file_path.split('/').pop() : '') + '\')" style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:#E0F7FD;color:#005c75;border:1px solid #9ee5f6;cursor:pointer">📥</button>' +
+          '<td style="padding:12px 14px;text-align:center"><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap">' +
+            '<a href="javascript:void(0)" onclick="downloadFile(\'' + (ev.file_path ? ev.file_path.split('/').pop() : '') + '\')" style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:#E0F7FD;color:#005c75;border:1px solid #9ee5f6;text-decoration:none;cursor:pointer">📥</a>' +
             (ev.status === 'uploaded' ?
               '<button onclick="approveEvidence(' + ev.id + ')" style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:#f0faf3;color:#26B67B;border:1px solid #88d4ae;cursor:pointer">✅ اعتماد</button>' +
-              '<button onclick="showRejectModal(' + ev.id + ',\'' + ev.question_code + '\',' + ev.level + ',\'' + dept.replace(/'/g,"\\'") + '\')" style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:#fef5f3;color:#a8331f;border:1px solid #f1c5bc;cursor:pointer">❌ رفض</button>'
+              '<button onclick="showRejectModal(' + ev.id + ',\'' + escapeHtml(ev.question_code) + '\',' + ev.level + ',\'' + escapeHtml(dept).replace(/'/g,"\\'") + '\')" style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:#fef5f3;color:#a8331f;border:1px solid #f1c5bc;cursor:pointer">❌ رفض</button>'
+            : ev.status === 'approved' ?
+              '<button onclick="revertEvidence(' + ev.id + ')" style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:#fef9ee;color:#735c0e;border:1px solid #ebd97a;cursor:pointer">↩ تراجع</button>'
+            : ev.status === 'rejected' ?
+              '<button onclick="revertEvidence(' + ev.id + ')" style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:#fef9ee;color:#735c0e;border:1px solid #ebd97a;cursor:pointer">↩ تراجع</button>'
             : '') +
           '</div></td>' +
         '</tr>';
@@ -3632,9 +3671,28 @@ async function renderEvidenceReview(){
 }
 
 async function approveEvidence(id){
+  if(!confirm('هل تريد اعتماد هذا الملف؟\n\nبعد الاعتماد يمكنك تعديل القرار لاحقاً.')) return;
   try {
-    const res = await authFetch('/api/evidence/' + id + '/approve', { method: 'PUT' });
-    const result = await res.json();
+    var res = await authFetch('/api/evidence/' + id + '/approve', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({})
+    });
+    var result = await res.json();
+    if(result.success){ renderEvidenceReview(); }
+    else { alert(result.error || 'حدث خطأ'); }
+  } catch(e){ alert('خطأ: ' + e.message); }
+}
+
+async function revertEvidence(id){
+  if(!confirm('هل تريد التراجع عن القرار وإعادة الملف لحالة "بانتظار المراجعة"؟')) return;
+  try {
+    var res = await authFetch('/api/evidence/' + id + '/revert', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({})
+    });
+    var result = await res.json();
     if(result.success){ renderEvidenceReview(); }
     else { alert(result.error || 'حدث خطأ'); }
   } catch(e){ alert('خطأ: ' + e.message); }
@@ -3778,19 +3836,23 @@ function escapeHtml(str){
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-function authFetch(url, opts){
-  opts = opts || {};
-  const token = sessionStorage.getItem('naii_token');
-  const headers = Object.assign({}, opts.headers || {});
+async function authFetch(url, opts = {}){
+  var token = sessionStorage.getItem('naii_token');
+  var headers = opts.headers || {};
   if(token) headers['Authorization'] = 'Bearer ' + token;
-  return fetch(url, Object.assign({}, opts, {headers})).then(res => {
-    if(res.status === 401){
-      sessionStorage.removeItem('naii_token');
-      sessionStorage.removeItem('naii_user');
-      location.reload();
-    }
-    return res;
-  });
+
+  // Don't set Content-Type for FormData (browser sets it with boundary)
+  if(opts.body instanceof FormData){
+    delete headers['Content-Type'];
+  }
+
+  var res = await fetch(url, { ...opts, headers: headers });
+  if(res.status === 401){
+    sessionStorage.removeItem('naii_token');
+    sessionStorage.removeItem('naii_user');
+    location.reload();
+  }
+  return res;
 }
 
 async function downloadFile(filename){
@@ -3964,8 +4026,16 @@ function setDomainDept(dIdx, val){
 }
 
 function setDomainTarget(dIdx, val){
+  val = parseInt(val);
+  if(isNaN(val)) return;
+  var d = state.domains[dIdx];
+  if(d.current !== null && val < d.current){
+    alert('⚠️ المستوى المستهدف لا يمكن أن يكون أقل من المستوى الحالي (L' + d.current + ')');
+    renderDomains();
+    return;
+  }
   if(!state.domainDetails[dIdx]) state.domainDetails[dIdx] = {};
-  state.domainDetails[dIdx].target = val === '' ? null : parseInt(val);
+  state.domainDetails[dIdx].target = val;
   saveState();
   renderDomains();
 }
@@ -4064,9 +4134,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (d.dept) state.domains[idx].dept = d.dept;
             if (d.current_level !== null) state.domains[idx].current = d.current_level;
             if (!state.domainDetails[idx]) state.domainDetails[idx] = {};
-            if (d.target_level !== null) state.domainDetails[idx].target = d.target_level;
+            if (d.target_level !== null && d.target_level !== undefined) state.domainDetails[idx].target = d.target_level;
             if (d.barriers) state.domainDetails[idx].barriers = d.barriers;
             if (d.notes) state.domainDetails[idx].notes = d.notes;
+            if (d.responsible) state.domainDetails[idx].responsible = d.responsible;
           }
         });
       }
