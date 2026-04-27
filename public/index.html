@@ -37,7 +37,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{font-family:'IBM Plex Sans Arabic','Tajawal',sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased}
-body{margin:0;background:radial-gradient(ellipse at 50% 0%,#f5f0fa 0%,var(--bg) 70%);font-family:'IBM Plex Sans Arabic','Tajawal','Noto Sans Arabic',system-ui,sans-serif;direction:rtl;color:var(--ink)}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#f5f0fa 0%,var(--bg) 70%);font-family:'IBM Plex Sans Arabic','Tajawal','Noto Sans Arabic',system-ui,sans-serif;direction:rtl;color:var(--ink)}
 a{color:inherit}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 .container{max-width:1440px;margin:0 auto;padding:0 28px}
@@ -93,7 +93,7 @@ nav.tabs{
 .tab-icon{width:18px;height:18px;display:inline-block;opacity:.85}
 
 /* SECTIONS */
-main{padding:32px 0 20px}
+main{padding:32px 0 20px;min-height:calc(100vh - 316px);box-sizing:border-box}
 .view{display:none;animation:fadeIn .3s ease}
 .view.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -2403,6 +2403,10 @@ function updateDomain(i, field, val){
   if(val === '' || val === null) val = null;
   else if(field==='current'||field==='target') val = parseInt(val);
   state.domains[i][field] = val;
+  if(field === 'target'){
+    if(!state.domainDetails[i]) state.domainDetails[i] = {};
+    state.domainDetails[i].target = val;
+  }
   saveState();
   renderDomains();
 }
@@ -4260,7 +4264,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (d.dept) state.domains[idx].dept = d.dept;
             if (d.current_level !== null && d.current_level !== undefined) state.domains[idx].current = d.current_level;
             if (!state.domainDetails[idx]) state.domainDetails[idx] = {};
-            if (d.target_level !== null && d.target_level !== undefined) state.domainDetails[idx].target = d.target_level;
+            if (d.target_level !== null && d.target_level !== undefined) {
+              state.domainDetails[idx].target = d.target_level;
+              state.domains[idx].target = d.target_level;
+            }
             if (d.barriers) state.domainDetails[idx].barriers = d.barriers;
             if (d.notes) state.domainDetails[idx].notes = d.notes;
             if (d.responsible) state.domainDetails[idx].responsible = d.responsible;
